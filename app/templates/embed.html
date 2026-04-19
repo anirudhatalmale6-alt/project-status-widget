@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Status Lookup</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: transparent; }
+        .embed-widget {
+            max-width: 500px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .embed-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+            padding: 16px 20px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .embed-body { padding: 16px 20px; }
+        .embed-search {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .embed-search input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .embed-search input:focus { border-color: #2563eb; }
+        .embed-search button {
+            padding: 10px 18px;
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .embed-search button:hover { background: #1d4ed8; }
+        .embed-result {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 10px;
+        }
+        .embed-result .project-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        .embed-result .project-detail {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+        .embed-result .project-detail span:last-child { font-weight: 500; color: #334155; }
+        .status-pill {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-in-progress { background: #fef3c7; color: #92400e; }
+        .status-completed { background: #d1fae5; color: #065f46; }
+        .status-pending { background: #fee2e2; color: #991b1b; }
+        .status-default { background: #e2e8f0; color: #475569; }
+        .embed-empty { text-align: center; color: #94a3b8; padding: 20px; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="embed-widget">
+    <div class="embed-header">Project Status Lookup</div>
+    <div class="embed-body">
+        <div class="embed-search">
+            <input type="text" id="embedSearch" placeholder="Enter Project ID or Name...">
+            <button onclick="embedLookup()">Search</button>
+        </div>
+        <div id="embedResults">
+            <div class="embed-empty">Enter a project ID or name to check status</div>
+        </div>
+    </div>
+</div>
+<script>
+    function getStatusClass(status) {
+        const s = (status || '').toLowerCase();
+        if (s.includes('progress')) return 'status-in-progress';
+        if (s.includes('complet')) return 'status-completed';
+        if (s.includes('pending') || s.includes('hold')) return 'status-pending';
+        return 'status-default';
+    }
+
+    async function embedLookup() {
+        const q = document.getElementById('embedSearch').value.trim();
+        if (!q) return;
+        const container = document.getElementById('embedResults');
+        container.innerHTML = '<div class="embed-empty">Searching...</div>';
+
+        try {
+            const params = new URLSearchParams({ q, token: window.EMBED_TOKEN || '' });
+            const res = await fetch(`/embed/search?${params}`);
+            const data = await res.json();
+
+            if (data.error) {
+                container.innerHTML = '<div class="embed-empty">Access denied</div>';
+                return;
+            }
+            if (!data.results || data.results.length === 0) {
+                container.innerHTML = '<div class="embed-empty">No projects found</div>';
+                return;
+            }
+
+            const headers = data.headers || [];
+            const orderedKeys = headers.map(h => h.trim().toLowerCase().replace(/\s+/g, '_'));
+            container.innerHTML = data.results.map(p => {
+                const idKey = orderedKeys.find(k => k.includes('id')) || orderedKeys[0];
+                const nameKey = orderedKeys.find(k => k.includes('name')) || orderedKeys[1];
+
+                return `<div class="embed-result">
+                    <div class="project-name">${p[nameKey] || p[idKey] || 'Project'}</div>
+                    ${orderedKeys.map((k, i) => `
+                        <div class="project-detail">
+                            <span>${headers[i] || k}</span>
+                            <span>${k.includes('status')
+                                ? `<span class="status-pill ${getStatusClass(p[k])}">${p[k]}</span>`
+                                : p[k] || '-'}</span>
+                        </div>
+                    `).join('')}
+                </div>`;
+            }).join('');
+        } catch (e) {
+            container.innerHTML = '<div class="embed-empty">Error connecting to server</div>';
+        }
+    }
+
+    document.getElementById('embedSearch').addEventListener('keypress', e => {
+        if (e.key === 'Enter') embedLookup();
+    });
+</script>
+</body>
+</html>
