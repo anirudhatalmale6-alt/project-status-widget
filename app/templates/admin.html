@@ -49,11 +49,15 @@
             <div class="card-body">
                 <form method="POST" action="{{ url_for('admin_add_customer') }}" class="add-customer-form">
                     <div class="form-row">
-                        <input type="text" name="full_name" placeholder="Full Name" class="form-input">
+                        <input type="text" name="full_name" placeholder="Company / Client Name" class="form-input">
                         <input type="text" name="username" placeholder="Username" required class="form-input">
                         <input type="password" name="password" placeholder="Password" required class="form-input">
+                    </div>
+                    <div class="form-row" style="margin-top: 8px;">
+                        <input type="text" name="filter_value" placeholder="Filter keywords (e.g. city or name to match in Excel)" class="form-input" style="flex: 3;">
                         <button type="submit" class="btn btn-primary">Add</button>
                     </div>
+                    <p class="text-muted" style="margin-top: 4px; font-size: 12px;">Filter controls which records this client can see. Leave empty to show all records.</p>
                 </form>
                 <div class="customer-list">
                     {% if customers %}
@@ -62,6 +66,7 @@
                             <tr>
                                 <th>Name</th>
                                 <th>Username</th>
+                                <th>Filter</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -71,6 +76,7 @@
                             <tr>
                                 <td>{{ c.full_name or '-' }}</td>
                                 <td>{{ c.username }}</td>
+                                <td style="font-size: 12px; color: var(--text-muted);">{{ c.filter_value or 'All records' }}</td>
                                 <td>
                                     <span class="badge {{ 'badge-active' if c.active else 'badge-inactive' }}">
                                         {{ 'Active' if c.active else 'Disabled' }}

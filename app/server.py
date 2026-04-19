@@ -6,7 +6,7 @@ from functools import wraps
 from werkzeug.utils import secure_filename
 import config
 from excel_reader import search_projects, read_projects, get_project_headers
-from auth import create_customer, verify_customer, list_customers, delete_customer, toggle_customer
+from auth import create_customer, verify_customer, list_customers, delete_customer, toggle_customer, get_customer
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
@@ -51,6 +51,7 @@ def customer_login():
         if customer:
             session['customer_id'] = customer['id']
             session['customer_name'] = customer['full_name'] or customer['username']
+            session['customer_filter'] = customer.get('filter_value', '')
             return redirect(url_for('widget'))
         flash('Invalid username or password')
     return render_template('login.html')
@@ -73,7 +74,14 @@ def widget():
 @customer_required
 def api_search():
     query = request.args.get('q', '').strip()
+    customer_filter = session.get('customer_filter', '').strip()
     results = search_projects(config.EXCEL_FILE, query)
+    # If customer has a filter, only show their records
+    if customer_filter:
+        filter_terms = [f.strip().lower() for f in customer_filter.split(',') if f.strip()]
+        results = [r for r in results if any(
+            any(ft in str(v).lower() for v in r.values()) for ft in filter_terms
+        )]
     headers = get_project_headers(config.EXCEL_FILE)
     return jsonify({'results': results, 'headers': headers})
 
@@ -151,9 +159,10 @@ def admin_add_customer():
     username = request.form.get('username', '').strip()
     password = request.form.get('password', '').strip()
     full_name = request.form.get('full_name', '').strip()
+    filter_value = request.form.get('filter_value', '').strip()
     if not username or not password:
         flash('Username and password are required')
-    elif create_customer(username, password, full_name):
+    elif create_customer(username, password, full_name, filter_value):
         flash(f'Customer "{username}" created successfully')
     else:
         flash(f'Username "{username}" already exists')

@@ -17,9 +17,15 @@ def init_db():
         username TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
         full_name TEXT,
+        filter_value TEXT DEFAULT '',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         active INTEGER DEFAULT 1
     )''')
+    # Add filter_value column if upgrading from older schema
+    try:
+        conn.execute('ALTER TABLE customers ADD COLUMN filter_value TEXT DEFAULT ""')
+    except sqlite3.OperationalError:
+        pass
     conn.commit()
     conn.close()
 
@@ -29,12 +35,12 @@ def hash_password(password):
     return hashlib.sha256(f"{salt}{password}".encode()).hexdigest()
 
 
-def create_customer(username, password, full_name=''):
+def create_customer(username, password, full_name='', filter_value=''):
     conn = get_db()
     try:
         conn.execute(
-            'INSERT INTO customers (username, password_hash, full_name) VALUES (?, ?, ?)',
-            (username, hash_password(password), full_name)
+            'INSERT INTO customers (username, password_hash, full_name, filter_value) VALUES (?, ?, ?, ?)',
+            (username, hash_password(password), full_name, filter_value)
         )
         conn.commit()
         return True
@@ -54,9 +60,16 @@ def verify_customer(username, password):
     return dict(row) if row else None
 
 
+def get_customer(customer_id):
+    conn = get_db()
+    row = conn.execute('SELECT * FROM customers WHERE id = ?', (customer_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
 def list_customers():
     conn = get_db()
-    rows = conn.execute('SELECT id, username, full_name, active, created_at FROM customers').fetchall()
+    rows = conn.execute('SELECT id, username, full_name, filter_value, active, created_at FROM customers').fetchall()
     conn.close()
     return [dict(r) for r in rows]
 

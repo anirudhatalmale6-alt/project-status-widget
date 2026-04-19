@@ -16,3 +16,27 @@
 [2026-04-19 05:32:23 +0000] [1256064] [INFO] Booting worker with pid: 1256064
 [2026-04-19 05:32:23 +0000] [1256080] [INFO] Booting worker with pid: 1256080
 [2026-04-19 05:32:23 +0000] [1256063] [INFO] Control socket listening at /home/freelancer8/.gunicorn/gunicorn.ctl
+[2026-04-19 05:57:07 +0000] [1256063] [INFO] Handling signal: term
+[2026-04-19 05:57:07 +0000] [1256080] [INFO] Worker exiting (pid: 1256080)
+[2026-04-19 05:57:07 +0000] [1256064] [INFO] Worker exiting (pid: 1256064)
+[2026-04-19 05:57:07 +0000] [1256063] [INFO] Worker (pid:1256064) was sent SIGTERM!
+[2026-04-19 05:57:07 +0000] [1256063] [INFO] Worker (pid:1256080) was sent SIGTERM!
+[2026-04-19 05:57:07 +0000] [1256063] [INFO] Shutting down: Master
+[2026-04-19 05:57:08 +0000] [1266656] [INFO] Starting gunicorn 25.3.0
+[2026-04-19 05:57:08 +0000] [1266656] [INFO] Listening at: http://0.0.0.0:5050 (1266656)
+[2026-04-19 05:57:08 +0000] [1266656] [INFO] Using worker: sync
+[2026-04-19 05:57:08 +0000] [1266657] [INFO] Booting worker with pid: 1266657
+[2026-04-19 05:57:08 +0000] [1266658] [INFO] Booting worker with pid: 1266658
+[2026-04-19 05:57:08 +0000] [1266656] [INFO] Control socket listening at /home/freelancer8/.gunicorn/gunicorn.ctl
+[2026-04-19 05:58:17 +0000] [1266656] [INFO] Handling signal: term
+[2026-04-19 05:58:17 +0000] [1266657] [INFO] Worker exiting (pid: 1266657)
+[2026-04-19 05:58:17 +0000] [1266658] [INFO] Worker exiting (pid: 1266658)
+[2026-04-19 05:58:18 +0000] [1266656] [INFO] Worker (pid:1266657) was sent SIGTERM!
+[2026-04-19 05:58:18 +0000] [1266656] [INFO] Worker (pid:1266658) was sent SIGTERM!
+[2026-04-19 05:58:18 +0000] [1266656] [INFO] Shutting down: Master
+[2026-04-19 05:58:19 +0000] [1267123] [INFO] Starting gunicorn 25.3.0
+[2026-04-19 05:58:19 +0000] [1267123] [INFO] Listening at: http://0.0.0.0:5050 (1267123)
+[2026-04-19 05:58:19 +0000] [1267123] [INFO] Using worker: sync
+[2026-04-19 05:58:19 +0000] [1267124] [INFO] Booting worker with pid: 1267124
+[2026-04-19 05:58:19 +0000] [1267125] [INFO] Booting worker with pid: 1267125
+[2026-04-19 05:58:19 +0000] [1267123] [INFO] Control socket listening at /home/freelancer8/.gunicorn/gunicorn.ctl

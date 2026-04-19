@@ -18,6 +18,14 @@ function headerToKey(header) {
     return header.trim().toLowerCase().replace(/\s+/g, '_');
 }
 
+// Parse date string as local date (avoids UTC timezone shift)
+function parseLocalDate(dateStr) {
+    if (!dateStr) return null;
+    const parts = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (!parts) return null;
+    return new Date(parseInt(parts[1]), parseInt(parts[2]) - 1, parseInt(parts[3]));
+}
+
 function deriveStatus(project, orderedKeys) {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
@@ -27,8 +35,8 @@ function deriveStatus(project, orderedKeys) {
     const deliveryKey = orderedKeys.find(k => k.includes('delivery') || k.includes('expected'));
     const delayKey = orderedKeys.find(k => k.includes('delay'));
 
-    const inspDate = inspectionKey && project[inspectionKey] ? new Date(project[inspectionKey]) : null;
-    const delDate = deliveryKey && project[deliveryKey] ? new Date(project[deliveryKey]) : null;
+    const inspDate = inspectionKey ? parseLocalDate(project[inspectionKey]) : null;
+    const delDate = deliveryKey ? parseLocalDate(project[deliveryKey]) : null;
     const hasDelay = delayKey && project[delayKey] && project[delayKey].trim() !== '';
 
     if (inspDate) inspDate.setHours(0, 0, 0, 0);
@@ -47,14 +55,14 @@ function getDaysInfo(expectedDelivery, inspectionDate) {
 
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    const delivery = new Date(expectedDelivery);
-    delivery.setHours(0, 0, 0, 0);
-    const daysLeft = Math.ceil((delivery - now) / (1000 * 60 * 60 * 24));
+    const delivery = parseLocalDate(expectedDelivery);
+    if (!delivery) return { daysLeft: null, percent: 0 };
+    const daysLeft = Math.round((delivery - now) / (1000 * 60 * 60 * 24));
 
     let percent = 0;
     if (inspectionDate) {
-        const start = new Date(inspectionDate);
-        start.setHours(0, 0, 0, 0);
+        const start = parseLocalDate(inspectionDate);
+        if (!start) return { daysLeft, percent: 0 };
         const totalDays = Math.ceil((delivery - start) / (1000 * 60 * 60 * 24));
         if (totalDays > 0) {
             const elapsed = totalDays - daysLeft;
@@ -96,10 +104,9 @@ function renderTracker(project, headers) {
     // Format dates nicely
     const formatDate = (d) => {
         if (!d) return '-';
-        try {
-            const date = new Date(d);
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        } catch { return d; }
+        const date = parseLocalDate(d);
+        if (!date) return d;
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
     // ETA text
