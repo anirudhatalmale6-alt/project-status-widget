@@ -171,6 +171,90 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* === Collapsed card summary === */
+.card-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.card-summary:hover {
+    background: rgba(255,255,255,0.03);
+}
+
+.summary-left {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.summary-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.summary-status {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.summary-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.summary-eta {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.summary-chevron {
+    color: rgba(255,255,255,0.4);
+    transition: transform 0.3s;
+}
+
+/* When expanded, hide summary and show full card */
+.tracker-card .card-summary {
+    display: none;
+}
+
+.tracker-card .card-expanded {
+    display: block;
+}
+
+/* When collapsed, show summary and hide full card */
+.tracker-card.collapsed .card-summary {
+    display: flex;
+}
+
+.tracker-card.collapsed .card-expanded {
+    display: none;
+}
+
+.tracker-card.collapsed .summary-chevron {
+    transform: rotate(0deg);
+}
+
+.tracker-card:not(.collapsed) .summary-chevron {
+    transform: rotate(180deg);
+}
+
 /* === Urgent Card === */
 .tracker-card.urgent-card {
     border: 2px solid #E54D42;

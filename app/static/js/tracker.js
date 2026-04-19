@@ -281,104 +281,124 @@ function renderTracker(project, headers, options = {}) {
     const urgencyBtnLabel = urgent ? 'URGENT' : 'Mark Urgent';
     const urgencyBtnClass = urgent ? 'urgency-btn active' : 'urgency-btn';
 
+    // Collapsed summary for pinned cards
+    const collapsedClass = isPinned ? ' collapsed' : '';
+    const statusColor = isCompleted ? '#05944F' : isDelayed ? '#E54D42' : urgent ? '#E54D42' : '#276EF1';
+    const summaryEta = isCompleted ? 'Delivered' : etaText;
+
     return `
-        <div class="${cardClass}" data-name="${fullName.replace(/"/g, '&quot;')}">
-            <div class="${etaFullClass}">
-                <div class="eta-top-row">
-                    <div>
-                        <div class="eta-label">Estimated Delivery</div>
-                        <div class="eta-value">${etaText}</div>
-                        <div class="eta-sublabel">${etaSub}</div>
+        <div class="${cardClass}${collapsedClass}" data-name="${fullName.replace(/"/g, '&quot;')}">
+            <!-- Collapsed summary bar - click to expand -->
+            <div class="card-summary" onclick="toggleCardExpand(this)">
+                <div class="summary-left">
+                    <span class="summary-name">${fullName}</span>
+                    <span class="summary-status" style="color: ${statusColor};">${status}</span>
+                </div>
+                <div class="summary-right">
+                    <span class="summary-eta" style="background: ${statusColor};">${summaryEta}</span>
+                    <svg class="summary-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+            </div>
+
+            <!-- Expandable full details -->
+            <div class="card-expanded">
+                <div class="${etaFullClass}">
+                    <div class="eta-top-row">
+                        <div>
+                            <div class="eta-label">Estimated Delivery</div>
+                            <div class="eta-value">${etaText}</div>
+                            <div class="eta-sublabel">${etaSub}</div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="${urgencyBtnClass}" onclick="event.stopPropagation(); toggleUrgency('${fullName.replace(/'/g, "\\'")}', this)" title="Toggle urgent tracking">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                <span>${urgencyBtnLabel}</span>
+                            </button>
+                            <button class="info-btn" onclick="event.stopPropagation(); showInfoModal()" title="How urgency works">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                            </button>
+                        </div>
                     </div>
-                    <div class="card-actions">
-                        <button class="${urgencyBtnClass}" onclick="toggleUrgency('${fullName.replace(/'/g, "\\'")}', this)" title="Toggle urgent tracking - shows countdown in hours/minutes and plays a sound on delivery">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                            <span>${urgencyBtnLabel}</span>
-                        </button>
-                        <button class="info-btn" onclick="showInfoModal()" title="How urgency works">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                        </button>
+                </div>
+
+                <div class="tracker-info">
+                    <div class="tracker-project-name">${fullName}</div>
+                    <div class="tracker-project-id">${claimNum || location}</div>
+                </div>
+
+                <div class="delivery-vehicle">
+                    <div class="vehicle-start"></div>
+                    <div class="vehicle-road${urgent && !isCompleted ? ' urgent-road' : ''}"></div>
+                    <div class="vehicle-icon" style="left: 0%" data-target="${vehiclePercent}">📋</div>
+                    <div class="vehicle-end">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3" fill="#0a0a0a"/></svg>
+                        <span class="vehicle-end-label">Delivery</span>
                     </div>
                 </div>
-            </div>
 
-            <div class="tracker-info">
-                <div class="tracker-project-name">${fullName}</div>
-                <div class="tracker-project-id">${claimNum || location}</div>
-            </div>
-
-            <div class="delivery-vehicle">
-                <div class="vehicle-start"></div>
-                <div class="vehicle-road${urgent && !isCompleted ? ' urgent-road' : ''}"></div>
-                <div class="vehicle-icon" style="left: 0%" data-target="${vehiclePercent}">📋</div>
-                <div class="vehicle-end">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3" fill="#0a0a0a"/></svg>
-                    <span class="vehicle-end-label">Delivery</span>
-                </div>
-            </div>
-
-            <div class="tracker-timeline">
-                <div class="timeline-track">
-                    <div class="timeline-bar">
-                        <div class="${barFillClass}" style="width: 0%" data-target="${barPercent}"></div>
+                <div class="tracker-timeline">
+                    <div class="timeline-track">
+                        <div class="timeline-bar">
+                            <div class="${barFillClass}" style="width: 0%" data-target="${barPercent}"></div>
+                        </div>
+                        ${STAGES.map((stage, i) => {
+                            let stepClass = '';
+                            if (isCompleted) stepClass = 'done';
+                            else if (i < activeStage) stepClass = 'done';
+                            else if (i === activeStage && !isDelayed) stepClass = 'active';
+                            return `
+                                <div class="timeline-step ${stepClass}${urgent && !isCompleted ? ' urgent-step' : ''}">
+                                    <div class="step-dot">${STAGE_ICONS[stage]}</div>
+                                    <span class="step-label">${stage}</span>
+                                </div>
+                            `;
+                        }).join('')}
                     </div>
-                    ${STAGES.map((stage, i) => {
-                        let stepClass = '';
-                        if (isCompleted) stepClass = 'done';
-                        else if (i < activeStage) stepClass = 'done';
-                        else if (i === activeStage && !isDelayed) stepClass = 'active';
-                        return `
-                            <div class="timeline-step ${stepClass}${urgent && !isCompleted ? ' urgent-step' : ''}">
-                                <div class="step-dot">${STAGE_ICONS[stage]}</div>
-                                <span class="step-label">${stage}</span>
-                            </div>
-                        `;
-                    }).join('')}
                 </div>
-            </div>
 
-            <div class="tracker-details">
-                ${location ? `
-                <div class="detail-row">
-                    <span class="detail-row-label">Location</span>
-                    <span class="detail-row-value">${location}</span>
-                </div>` : ''}
-                ${claimNum ? `
-                <div class="detail-row">
-                    <span class="detail-row-label">Claim Number</span>
-                    <span class="detail-row-value">${claimNum}</span>
-                </div>` : ''}
-                <div class="detail-row">
-                    <span class="detail-row-label">Status</span>
-                    <span class="detail-row-value">${status}</span>
+                <div class="tracker-details">
+                    ${location ? `
+                    <div class="detail-row">
+                        <span class="detail-row-label">Location</span>
+                        <span class="detail-row-value">${location}</span>
+                    </div>` : ''}
+                    ${claimNum ? `
+                    <div class="detail-row">
+                        <span class="detail-row-label">Claim Number</span>
+                        <span class="detail-row-value">${claimNum}</span>
+                    </div>` : ''}
+                    <div class="detail-row">
+                        <span class="detail-row-label">Status</span>
+                        <span class="detail-row-value">${status}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-row-label">Inspection Date</span>
+                        <span class="detail-row-value">${formatDate(inspectionDate)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-row-label">Expected Delivery</span>
+                        <span class="detail-row-value">${formatDate(expectedDelivery)}</span>
+                    </div>
+                    ${requestedDate ? `
+                    <div class="detail-row">
+                        <span class="detail-row-label">Requested Delivery</span>
+                        <span class="detail-row-value" style="color: #F6AE2D;">${formatDate(requestedDate)}</span>
+                    </div>` : ''}
+                    ${delayReason ? `
+                    <div class="detail-row">
+                        <span class="detail-row-label">Delay Reason</span>
+                        <span class="detail-row-value" style="color: #E54D42;">${delayReason}</span>
+                    </div>` : ''}
                 </div>
-                <div class="detail-row">
-                    <span class="detail-row-label">Inspection Date</span>
-                    <span class="detail-row-value">${formatDate(inspectionDate)}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-row-label">Expected Delivery</span>
-                    <span class="detail-row-value">${formatDate(expectedDelivery)}</span>
-                </div>
-                ${requestedDate ? `
-                <div class="detail-row">
-                    <span class="detail-row-label">Requested Delivery</span>
-                    <span class="detail-row-value" style="color: #F6AE2D;">${formatDate(requestedDate)}</span>
-                </div>` : ''}
-                ${delayReason ? `
-                <div class="detail-row">
-                    <span class="detail-row-label">Delay Reason</span>
-                    <span class="detail-row-value" style="color: #E54D42;">${delayReason}</span>
+
+                ${!isCompleted ? `
+                <div class="card-footer-actions">
+                    <button class="request-date-btn" onclick="event.stopPropagation(); showDeliveryModal('${fullName.replace(/'/g, "\\'")}')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        Request for Expedited Delivery
+                    </button>
                 </div>` : ''}
             </div>
-
-            ${!isCompleted ? `
-            <div class="card-footer-actions">
-                <button class="request-date-btn" onclick="showDeliveryModal('${fullName.replace(/'/g, "\\'")}')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                    Request for Expedited Delivery
-                </button>
-            </div>` : ''}
         </div>
     `;
 }
@@ -390,6 +410,17 @@ function animateCards() {
     document.querySelectorAll('.vehicle-icon').forEach(icon => {
         setTimeout(() => { icon.style.left = icon.dataset.target + '%'; }, 300);
     });
+}
+
+// --- Toggle card expand/collapse ---
+function toggleCardExpand(summaryEl) {
+    const card = summaryEl.closest('.tracker-card');
+    if (!card) return;
+    card.classList.toggle('collapsed');
+    // Animate bars if expanding
+    if (!card.classList.contains('collapsed')) {
+        requestAnimationFrame(() => animateCards());
+    }
 }
 
 // --- Toggle urgency ---
