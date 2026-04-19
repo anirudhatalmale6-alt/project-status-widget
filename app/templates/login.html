@@ -6,15 +6,7 @@
 <div class="login-container">
     <div class="login-card">
         <div class="login-header">
-            <div class="login-icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M9 17H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-4"/>
-                    <path d="M12 15l-3 3 3 3"/><path d="M12 15v6"/>
-                    <rect x="6" y="7" width="12" height="2" rx="1"/>
-                    <rect x="6" y="11" width="8" height="2" rx="1"/>
-                </svg>
-            </div>
-            <h1>Advance Forensic</h1>
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Advance Forensic" class="login-logo">
             <p>Sign in to track your inspection status</p>
         </div>
         {% with messages = get_flashed_messages() %}

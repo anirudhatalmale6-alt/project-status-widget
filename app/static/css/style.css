@@ -111,6 +111,13 @@ body {
     margin-bottom: 24px;
 }
 
+.login-logo {
+    max-width: 280px;
+    height: auto;
+    margin: 0 auto 16px;
+    display: block;
+}
+
 .login-icon {
     width: 72px;
     height: 72px;
