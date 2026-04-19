@@ -393,15 +393,49 @@ function toggleUrgency(name, btn) {
     const nowUrgent = !isUrgent(name);
     setUrgency(name, nowUrgent);
 
-    // Notify server
+    // Instantly update the card visually without waiting for server
+    const card = btn.closest('.tracker-card');
+    if (card) {
+        if (nowUrgent) {
+            card.classList.add('urgent-card');
+            // Update ETA banner
+            const eta = card.querySelector('.tracker-eta');
+            if (eta) {
+                eta.classList.remove('status-completed', 'status-on-hold', 'status-pending');
+                eta.classList.add('status-urgent', 'urgent-eta');
+            }
+            // Update button
+            btn.classList.add('active');
+            const span = btn.querySelector('span');
+            if (span) span.textContent = 'URGENT';
+            // Update progress bar and steps
+            card.querySelectorAll('.timeline-bar-fill').forEach(b => b.classList.add('urgent-bar'));
+            card.querySelectorAll('.timeline-step').forEach(s => s.classList.add('urgent-step'));
+            card.querySelector('.vehicle-road')?.classList.add('urgent-road');
+        } else {
+            card.classList.remove('urgent-card');
+            const eta = card.querySelector('.tracker-eta');
+            if (eta) {
+                eta.classList.remove('status-urgent', 'urgent-eta');
+            }
+            btn.classList.remove('active');
+            const span = btn.querySelector('span');
+            if (span) span.textContent = 'Mark Urgent';
+            card.querySelectorAll('.timeline-bar-fill').forEach(b => b.classList.remove('urgent-bar'));
+            card.querySelectorAll('.timeline-step').forEach(s => s.classList.remove('urgent-step'));
+            card.querySelector('.vehicle-road')?.classList.remove('urgent-road');
+        }
+    }
+
+    // Notify server (non-blocking)
     fetch('/api/notify-urgent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: name, urgent: nowUrgent })
     }).catch(() => {});
 
-    // Re-render everything
-    refreshAll();
+    // Full refresh in background to update countdown text
+    setTimeout(() => refreshAll(), 500);
 }
 
 // --- Info modal ---
