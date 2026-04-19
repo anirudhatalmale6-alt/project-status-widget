@@ -493,7 +493,18 @@ async function doSearch(pinAfterSearch) {
             });
         }
 
-        resultsContainer.innerHTML = data.results.map(p => renderTracker(p, data.headers)).join('');
+        // Filter out results that are already shown in pinned section
+        const pinnedNames = getPinned().map(n => n.toLowerCase());
+        const orderedKeysForFilter = data.headers ? data.headers.map(h => headerToKey(h)) : [];
+        const nameKeyF = orderedKeysForFilter.find(k => k === 'name') || orderedKeysForFilter.find(k => k.includes('name') && !k.includes('last'));
+        const lastNameKeyF = orderedKeysForFilter.find(k => k.includes('last'));
+
+        const filteredResults = data.results.filter(p => {
+            const fn = [p[nameKeyF], p[lastNameKeyF]].filter(Boolean).join(' ').trim().toLowerCase();
+            return !pinnedNames.includes(fn);
+        });
+
+        resultsContainer.innerHTML = filteredResults.map(p => renderTracker(p, data.headers)).join('');
         requestAnimationFrame(() => animateCards());
     } catch (e) {
         resultsContainer.innerHTML = '<div class="no-results">Connection error. Please try again.</div>';
