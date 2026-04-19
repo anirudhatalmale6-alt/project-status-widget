@@ -100,12 +100,18 @@ def read_projects_from_sheet(sheet_id):
 
 
 def search_projects_from_sheet(sheet_id, query):
-    """Search projects by query (case-insensitive partial match)."""
+    """Search projects by name or claim number (case-insensitive partial match)."""
     projects = read_projects_from_sheet(sheet_id)
     if not query:
-        return projects
+        return []
     query = query.lower().strip()
-    return [p for p in projects if any(query in str(v).lower() for v in p.values())]
+    # Only match on name, last_name, and claim fields - not all fields
+    search_keys = [k for k in (projects[0].keys() if projects else [])
+                   if 'name' in k or 'claim' in k or 'last' in k]
+    if not search_keys:
+        # Fallback to all fields if no name/claim keys found
+        return [p for p in projects if any(query in str(v).lower() for v in p.values())]
+    return [p for p in projects if any(query in str(p.get(k, '')).lower() for k in search_keys)]
 
 
 def get_headers_from_sheet(sheet_id):

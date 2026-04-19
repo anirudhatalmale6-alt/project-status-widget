@@ -486,7 +486,7 @@ async function doSearch(pinAfterSearch) {
         const data = await res.json();
 
         if (!data.results || data.results.length === 0) {
-            resultsContainer.innerHTML = '<div class="no-results">No records found. Check the name or claim number and try again.</div>';
+            resultsContainer.innerHTML = '<div class="no-results">Not found</div>';
             return;
         }
 

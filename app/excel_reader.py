@@ -35,13 +35,16 @@ def read_projects(excel_path):
 
 
 def search_projects(excel_path, query):
-    """Search projects by ID or name (case-insensitive partial match)."""
+    """Search projects by name or claim number (case-insensitive partial match)."""
     projects = read_projects(excel_path)
     if not query:
-        return projects
-
+        return []
     query = query.lower().strip()
-    return [p for p in projects if any(query in str(v).lower() for v in p.values())]
+    search_keys = [k for k in (projects[0].keys() if projects else [])
+                   if 'name' in k or 'claim' in k or 'last' in k]
+    if not search_keys:
+        return [p for p in projects if any(query in str(v).lower() for v in p.values())]
+    return [p for p in projects if any(query in str(p.get(k, '')).lower() for k in search_keys)]
 
 
 def get_project_headers(excel_path):
