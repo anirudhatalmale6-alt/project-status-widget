@@ -3,12 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Project Status Widget{% endblock %}</title>
+    <meta name="theme-color" content="#276EF1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>{% block title %}Advance Forensic - Tracker{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/icon-192.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/icon-192.png') }}">
     {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
     {% block content %}{% endblock %}
     {% block scripts %}{% endblock %}
+
+    <!-- Install prompt banner -->
+    <div id="installBanner" style="display:none; position:fixed; bottom:0; left:0; right:0; background:linear-gradient(135deg,#276EF1,#1B5CD7); color:#fff; padding:14px 20px; z-index:9999; text-align:center; font-size:14px; box-shadow:0 -2px 10px rgba(0,0,0,0.3);">
+        <span>Install this app on your device for quick access</span>
+        <button id="installBtn" style="margin-left:12px; background:#fff; color:#276EF1; border:none; padding:8px 20px; border-radius:6px; font-weight:600; cursor:pointer;">Install</button>
+        <button id="dismissInstall" style="margin-left:8px; background:transparent; color:rgba(255,255,255,0.7); border:1px solid rgba(255,255,255,0.3); padding:8px 14px; border-radius:6px; cursor:pointer;">Later</button>
+    </div>
+
+    <script>
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/sw.js').catch(() => {});
+        }
+
+        // PWA install prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', e => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installBanner').style.display = 'block';
+        });
+
+        document.getElementById('installBtn')?.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                document.getElementById('installBanner').style.display = 'none';
+            }
+        });
+
+        document.getElementById('dismissInstall')?.addEventListener('click', () => {
+            document.getElementById('installBanner').style.display = 'none';
+        });
+    </script>
 </body>
 </html>

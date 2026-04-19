@@ -1,0 +1,22 @@
+{
+  "name": "Advance Forensic - Inspection Tracker",
+  "short_name": "AF Tracker",
+  "description": "Track your inspection status and delivery timeline",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#276EF1",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/static/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
