@@ -1,22 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Project Status - Dashboard{% endblock %}
+{% block title %}Project Status - Track Your Project{% endblock %}
 {% block body_class %}widget-page{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tracker.css') }}">
+{% endblock %}
 
 {% block content %}
 <div class="widget-container">
     <header class="widget-header">
         <div class="header-left">
-            <h1>Project Status</h1>
+            <h1>Track Your Project</h1>
             <span class="welcome">Welcome, {{ customer_name }}</span>
         </div>
         <div class="header-right">
-            <button class="btn btn-sm btn-outline" id="reminderToggle" title="Toggle delivery reminders">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                </svg>
-                <span>Reminders</span>
-            </button>
             <a href="{{ url_for('customer_logout') }}" class="btn btn-sm btn-outline">Logout</a>
         </div>
     </header>
@@ -26,32 +23,31 @@
             <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
             </svg>
-            <input type="text" id="searchInput" placeholder="Search by Project ID or Name..." autofocus>
-            <button class="btn btn-primary" id="searchBtn">Search</button>
+            <input type="text" id="searchInput" placeholder="Enter Project ID or Name..." autofocus>
+            <button class="btn btn-primary" id="searchBtn">Track</button>
         </div>
-    </div>
-
-    <div id="remindersPanel" class="reminders-panel" style="display:none;">
-        <h3>Upcoming Deliveries</h3>
-        <div id="remindersList"></div>
     </div>
 
     <div id="resultsSection" class="results-section">
         <div id="loadingIndicator" class="loading" style="display:none;">
             <div class="spinner"></div>
-            <span>Searching...</span>
+            <span>Locating your project...</span>
         </div>
         <div id="resultsContainer"></div>
         <div id="emptyState" class="empty-state">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-            </svg>
-            <p>Type a Project ID or Name to search</p>
+            <div class="empty-icon">
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                </svg>
+            </div>
+            <h3>Track Your Project</h3>
+            <p>Enter your Project ID or Name to see real-time status and estimated delivery</p>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script src="{{ url_for('static', filename='js/tracker.js') }}"></script>
 {% endblock %}
