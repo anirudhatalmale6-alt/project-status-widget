@@ -392,6 +392,14 @@ function animateCards() {
 function toggleUrgency(name, btn) {
     const nowUrgent = !isUrgent(name);
     setUrgency(name, nowUrgent);
+
+    // Notify server
+    fetch('/api/notify-urgent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name, urgent: nowUrgent })
+    }).catch(() => {});
+
     // Re-render everything
     refreshAll();
 }

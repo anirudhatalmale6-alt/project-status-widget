@@ -1,9 +1,11 @@
 import os
+import json
 import shutil
 from flask import (Flask, render_template, request, jsonify, redirect,
                    url_for, session, flash, send_from_directory)
 from functools import wraps
 from werkzeug.utils import secure_filename
+from datetime import datetime
 import config
 from excel_reader import search_projects, read_projects, get_project_headers
 from sheets_reader import (read_projects_from_sheet, search_projects_from_sheet,
@@ -221,15 +223,52 @@ def admin_preview():
     return jsonify({'projects': projects, 'headers': headers})
 
 
-# --- Delivery date request API ---
+# --- Notifications storage ---
+
+NOTIFICATIONS_FILE = os.path.join(config.DATA_DIR, 'notifications.json')
+
+
+def _load_notifications():
+    try:
+        with open(NOTIFICATIONS_FILE, 'r') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+
+def _save_notification(notif):
+    notifs = _load_notifications()
+    notifs.insert(0, notif)
+    with open(NOTIFICATIONS_FILE, 'w') as f:
+        json.dump(notifs, f, indent=2)
+
+
+def _send_email(subject, body):
+    """Attempt to send email notification. Returns True if sent."""
+    if not config.SMTP_USER or not config.SMTP_PASS:
+        return False
+    try:
+        import smtplib
+        from email.mime.text import MIMEText
+        msg = MIMEText(body)
+        msg['Subject'] = subject
+        msg['From'] = config.SMTP_USER
+        msg['To'] = config.NOTIFY_EMAIL
+        with smtplib.SMTP(config.SMTP_HOST, config.SMTP_PORT, timeout=10) as server:
+            server.starttls()
+            server.login(config.SMTP_USER, config.SMTP_PASS)
+            server.send_message(msg)
+        return True
+    except Exception as e:
+        print(f"Email send failed: {e}")
+        return False
+
+
+# --- Notification API endpoints ---
 
 @app.route('/api/request-delivery', methods=['POST'])
 @customer_required
 def api_request_delivery():
-    import smtplib
-    from email.mime.text import MIMEText
-    from datetime import datetime
-
     data = request.get_json()
     name = data.get('name', '').strip()
     requested_date = data.get('requested_date', '').strip()
@@ -239,39 +278,78 @@ def api_request_delivery():
     if not name or not requested_date:
         return jsonify({'success': False, 'error': 'Name and date are required'})
 
-    # Log the request
-    log_path = os.path.join(config.DATA_DIR, 'delivery_requests.log')
-    with open(log_path, 'a') as f:
-        f.write(f"{datetime.now().isoformat()} | Customer: {customer_name} | File: {name} | Requested: {requested_date} | Reason: {reason}\n")
+    notif = {
+        'type': 'expedited_delivery',
+        'file_name': name,
+        'requested_by': customer_name,
+        'requested_date': requested_date,
+        'reason': reason,
+        'timestamp': datetime.now().isoformat(),
+        'read': False
+    }
+    _save_notification(notif)
 
-    # Try to send email
-    email_sent = False
-    if config.SMTP_USER and config.SMTP_PASS:
-        try:
-            subject = f"Urgent Delivery Request: {name}"
-            body = (
-                f"Delivery Date Request\n"
-                f"{'='*40}\n\n"
-                f"Client/File: {name}\n"
-                f"Requested by: {customer_name}\n"
-                f"Desired delivery date: {requested_date}\n"
-                f"Reason: {reason or 'Not specified'}\n\n"
-                f"This request was submitted through the AF Tracker.\n"
-            )
-            msg = MIMEText(body)
-            msg['Subject'] = subject
-            msg['From'] = config.SMTP_USER
-            msg['To'] = config.NOTIFY_EMAIL
+    _send_email(
+        f"[AF Tracker] Expedited Delivery Request: {name}",
+        f"Expedited Delivery Request\n{'='*40}\n\n"
+        f"File: {name}\nRequested by: {customer_name}\n"
+        f"Desired date: {requested_date}\nReason: {reason or 'Not specified'}\n\n"
+        f"View all requests in your admin dashboard."
+    )
 
-            with smtplib.SMTP(config.SMTP_HOST, config.SMTP_PORT) as server:
-                server.starttls()
-                server.login(config.SMTP_USER, config.SMTP_PASS)
-                server.send_message(msg)
-            email_sent = True
-        except Exception as e:
-            print(f"Email send failed: {e}")
+    return jsonify({'success': True})
 
-    return jsonify({'success': True, 'email_sent': email_sent})
+
+@app.route('/api/notify-urgent', methods=['POST'])
+@customer_required
+def api_notify_urgent():
+    data = request.get_json()
+    name = data.get('name', '').strip()
+    urgent = data.get('urgent', False)
+    customer_name = session.get('customer_name', 'Unknown')
+
+    if not name:
+        return jsonify({'success': False, 'error': 'Name is required'})
+
+    notif = {
+        'type': 'urgent_toggle',
+        'file_name': name,
+        'requested_by': customer_name,
+        'urgent': urgent,
+        'timestamp': datetime.now().isoformat(),
+        'read': False
+    }
+    _save_notification(notif)
+
+    if urgent:
+        _send_email(
+            f"[AF Tracker] URGENT: {name} flagged as high priority",
+            f"Urgent File Alert\n{'='*40}\n\n"
+            f"File: {name}\nFlagged by: {customer_name}\n"
+            f"Status: MARKED AS URGENT\n\n"
+            f"This client has marked this file as high priority.\n"
+            f"View details in your admin dashboard."
+        )
+
+    return jsonify({'success': True})
+
+
+@app.route('/admin/notifications')
+@admin_required
+def admin_notifications():
+    notifs = _load_notifications()
+    return jsonify({'notifications': notifs, 'unread': sum(1 for n in notifs if not n.get('read'))})
+
+
+@app.route('/admin/notifications/read', methods=['POST'])
+@admin_required
+def admin_mark_read():
+    notifs = _load_notifications()
+    for n in notifs:
+        n['read'] = True
+    with open(NOTIFICATIONS_FILE, 'w') as f:
+        json.dump(notifs, f, indent=2)
+    return jsonify({'success': True})
 
 
 # --- Embeddable widget ---
