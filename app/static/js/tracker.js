@@ -156,7 +156,7 @@ function getDaysInfo(expectedDelivery, inspectionDate) {
     return { daysLeft, percent };
 }
 
-function getHoursMinutesLeft(expectedDelivery) {
+function getCountdownLeft(expectedDelivery) {
     if (!expectedDelivery) return null;
     const delivery = parseLocalDate(expectedDelivery);
     if (!delivery) return null;
@@ -164,10 +164,10 @@ function getHoursMinutesLeft(expectedDelivery) {
     delivery.setHours(17, 0, 0, 0);
     const now = new Date();
     const diff = delivery - now;
-    if (diff <= 0) return { hours: 0, minutes: 0, total: 0 };
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    return { hours, minutes, total: diff };
+    if (diff <= 0) return { days: 0, hours: 0, total: 0 };
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    return { days, hours, total: diff };
 }
 
 function renderTracker(project, headers, options = {}) {
@@ -224,12 +224,16 @@ function renderTracker(project, headers, options = {}) {
         etaSub = delayReason || 'Processing delay';
         etaClass = 'status-on-hold';
     } else if (urgent && expectedDelivery) {
-        const hm = getHoursMinutesLeft(expectedDelivery);
-        if (hm && hm.total > 0) {
-            etaText = `${hm.hours}h ${hm.minutes}m`;
+        const cd = getCountdownLeft(expectedDelivery);
+        if (cd && cd.total > 0) {
+            if (cd.days > 0) {
+                etaText = `${cd.days}d ${cd.hours}h`;
+            } else {
+                etaText = `${cd.hours}h`;
+            }
             etaSub = `Expected delivery: ${formatDate(expectedDelivery)}`;
             etaClass = 'status-urgent';
-        } else if (hm && hm.total <= 0) {
+        } else if (cd && cd.total <= 0) {
             etaText = 'Overdue';
             etaSub = `Was expected on ${formatDate(expectedDelivery)}`;
             etaClass = 'status-urgent';

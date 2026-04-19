@@ -19,8 +19,8 @@ HOST = os.environ.get('WIDGET_HOST', '0.0.0.0')
 GOOGLE_SHEET_ID = os.environ.get('GOOGLE_SHEET_ID', '167nzPAhyO7M0WzhuXjMUOZIi5AFCiyDhCZMNAM7PXOk')
 
 # Email notification for delivery requests
-NOTIFY_EMAIL = os.environ.get('NOTIFY_EMAIL', 'arashpeng@yahoo.com')
+NOTIFY_EMAIL = os.environ.get('NOTIFY_EMAIL', 'advanceforensic@gmail.com')
 SMTP_HOST = os.environ.get('SMTP_HOST', 'smtp.gmail.com')
 SMTP_PORT = int(os.environ.get('SMTP_PORT', 587))
-SMTP_USER = os.environ.get('SMTP_USER', '')
+SMTP_USER = os.environ.get('SMTP_USER', 'advanceforensic@gmail.com')
 SMTP_PASS = os.environ.get('SMTP_PASS', '')
