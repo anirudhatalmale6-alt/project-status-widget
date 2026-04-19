@@ -10,7 +10,7 @@
 <div class="widget-container">
     <header class="widget-header">
         <div class="header-left">
-            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Advance Forensic" style="height: 40px; margin-bottom: 4px; background: rgba(255,255,255,0.9); padding: 4px 10px; border-radius: 6px;">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Advance Forensic" style="height: 60px; margin-bottom: 4px; background: rgba(255,255,255,0.9); padding: 6px 14px; border-radius: 8px;">
             <span class="welcome">Welcome, {{ customer_name }}</span>
         </div>
         <div class="header-right">
@@ -84,8 +84,8 @@
             <div class="info-item">
                 <div class="info-icon">&#128197;</div>
                 <div>
-                    <strong>Request Delivery Date</strong>
-                    <p>Use the "Request Delivery Date" button to let us know if you need a report by a specific date. We'll receive your request and prioritize accordingly.</p>
+                    <strong>Request for Expedited Delivery</strong>
+                    <p>Use the "Request for Expedited Delivery" button to let us know if you need a report by a specific date. We'll receive your request and prioritize accordingly.</p>
                 </div>
             </div>
             <div class="info-item">
@@ -103,7 +103,7 @@
 <div id="deliveryModal" class="modal-overlay" style="display:none;">
     <div class="modal-box">
         <div class="modal-header">
-            <h3>Request Delivery Date</h3>
+            <h3>Request for Expedited Delivery</h3>
             <button class="modal-close" onclick="closeDeliveryModal()">&times;</button>
         </div>
         <div class="modal-body">

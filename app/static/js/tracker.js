@@ -372,7 +372,7 @@ function renderTracker(project, headers, options = {}) {
             <div class="card-footer-actions">
                 <button class="request-date-btn" onclick="showDeliveryModal('${fullName.replace(/'/g, "\\'")}')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                    Request Delivery Date
+                    Request for Expedited Delivery
                 </button>
             </div>` : ''}
         </div>
@@ -482,18 +482,7 @@ async function doSearch(pinAfterSearch) {
             return;
         }
 
-        // Auto-pin searched names
-        if (pinAfterSearch !== false) {
-            const orderedKeys = data.headers ? data.headers.map(h => headerToKey(h)) : [];
-            const nameKey = orderedKeys.find(k => k === 'name') || orderedKeys.find(k => k.includes('name') && !k.includes('last'));
-            const lastNameKey = orderedKeys.find(k => k.includes('last'));
-            data.results.forEach(p => {
-                const fn = [p[nameKey], p[lastNameKey]].filter(Boolean).join(' ');
-                if (fn) addPinned(fn);
-            });
-        }
-
-        // Filter out results that are already shown in pinned section
+        // Filter out results already shown in pinned section (check BEFORE pinning new names)
         const pinnedNames = getPinned().map(n => n.toLowerCase());
         const orderedKeysForFilter = data.headers ? data.headers.map(h => headerToKey(h)) : [];
         const nameKeyF = orderedKeysForFilter.find(k => k === 'name') || orderedKeysForFilter.find(k => k.includes('name') && !k.includes('last'));
@@ -506,6 +495,15 @@ async function doSearch(pinAfterSearch) {
 
         resultsContainer.innerHTML = filteredResults.map(p => renderTracker(p, data.headers)).join('');
         requestAnimationFrame(() => animateCards());
+
+        // Auto-pin searched names AFTER rendering, then refresh pinned section
+        if (pinAfterSearch !== false) {
+            data.results.forEach(p => {
+                const fn = [p[nameKeyF], p[lastNameKeyF]].filter(Boolean).join(' ');
+                if (fn) addPinned(fn);
+            });
+            refreshPinned();
+        }
     } catch (e) {
         resultsContainer.innerHTML = '<div class="no-results">Connection error. Please try again.</div>';
     } finally {
