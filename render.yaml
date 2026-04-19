@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: advance-forensic-tracker
+    runtime: python
+    buildCommand: pip install -r app/requirements.txt
+    startCommand: cd app && gunicorn server:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: WIDGET_SECRET_KEY
+        generateValue: true
+      - key: WIDGET_ADMIN_USER
+        value: admin
+      - key: WIDGET_ADMIN_PASS
+        value: admin123

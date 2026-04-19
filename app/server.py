@@ -202,15 +202,18 @@ def embed_search():
     return jsonify({'results': results, 'headers': headers})
 
 
-if __name__ == '__main__':
-    # Copy sample data if no Excel file exists
-    sample = os.path.join(os.path.dirname(config.BASE_DIR), 'sample', 'projects_data.xlsx')
-    if not os.path.exists(config.EXCEL_FILE) and os.path.exists(sample):
-        shutil.copy2(sample, config.EXCEL_FILE)
-        print(f"Copied sample data to {config.EXCEL_FILE}")
+# Copy sample/test data if no Excel file exists yet
+for candidate in ['test widget.xlsx', 'sample/projects_data.xlsx']:
+    src = os.path.join(os.path.dirname(config.BASE_DIR), candidate)
+    if not os.path.exists(config.EXCEL_FILE) and os.path.exists(src):
+        shutil.copy2(src, config.EXCEL_FILE)
+        print(f"Loaded initial data from {candidate}")
+        break
 
+
+if __name__ == '__main__':
     print(f"\n{'='*50}")
-    print(f"  Project Status Widget")
+    print(f"  Advance Forensic - Inspection Tracker")
     print(f"  Customer portal: http://localhost:{config.PORT}/")
     print(f"  Admin panel:     http://localhost:{config.PORT}/admin")
     print(f"  Admin login:     {config.ADMIN_USERNAME} / {config.ADMIN_PASSWORD}")
