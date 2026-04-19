@@ -3,6 +3,7 @@
 const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchBtn');
 const resultsContainer = document.getElementById('resultsContainer');
+const pinnedContainer = document.getElementById('pinnedContainer');
 const emptyState = document.getElementById('emptyState');
 const loadingIndicator = document.getElementById('loadingIndicator');
 
@@ -13,6 +14,89 @@ const STAGE_ICONS = {
     'Report Writing': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
     'Delivered': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
 };
+
+// --- Pinned history (localStorage) ---
+const PINNED_KEY = 'af_pinned_names';
+const URGENCY_KEY = 'af_urgency';
+const DELIVERY_REQ_KEY = 'af_delivery_requests';
+
+function getPinned() {
+    try { return JSON.parse(localStorage.getItem(PINNED_KEY)) || []; }
+    catch { return []; }
+}
+
+function savePinned(list) {
+    localStorage.setItem(PINNED_KEY, JSON.stringify(list));
+}
+
+function addPinned(name) {
+    const list = getPinned();
+    const norm = name.trim().toLowerCase();
+    if (!list.find(p => p.toLowerCase() === norm)) {
+        list.push(name.trim());
+        savePinned(list);
+    }
+}
+
+function removePinned(name) {
+    const list = getPinned().filter(p => p.toLowerCase() !== name.trim().toLowerCase());
+    savePinned(list);
+}
+
+// --- Urgency (localStorage) ---
+function getUrgency() {
+    try { return JSON.parse(localStorage.getItem(URGENCY_KEY)) || {}; }
+    catch { return {}; }
+}
+
+function setUrgency(name, isUrgent) {
+    const map = getUrgency();
+    const key = name.trim().toLowerCase();
+    if (isUrgent) map[key] = true;
+    else delete map[key];
+    localStorage.setItem(URGENCY_KEY, JSON.stringify(map));
+}
+
+function isUrgent(name) {
+    return !!getUrgency()[name.trim().toLowerCase()];
+}
+
+// --- Delivery date requests (localStorage) ---
+function getDeliveryRequests() {
+    try { return JSON.parse(localStorage.getItem(DELIVERY_REQ_KEY)) || {}; }
+    catch { return {}; }
+}
+
+function setDeliveryRequest(name, date) {
+    const map = getDeliveryRequests();
+    map[name.trim().toLowerCase()] = date;
+    localStorage.setItem(DELIVERY_REQ_KEY, JSON.stringify(map));
+}
+
+function getDeliveryRequest(name) {
+    return getDeliveryRequests()[name.trim().toLowerCase()] || null;
+}
+
+// --- Delivery sound ---
+let deliverySoundPlayed = {};
+function playDeliverySound() {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.15);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.15 + 0.4);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + i * 0.15);
+            osc.stop(ctx.currentTime + i * 0.15 + 0.4);
+        });
+    } catch (e) {}
+}
 
 function headerToKey(header) {
     return header.trim().toLowerCase().replace(/\s+/g, '_');
@@ -30,7 +114,6 @@ function deriveStatus(project, orderedKeys) {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
 
-    // Find relevant keys
     const inspectionKey = orderedKeys.find(k => k.includes('inspection'));
     const deliveryKey = orderedKeys.find(k => k.includes('delivery') || k.includes('expected'));
     const delayKey = orderedKeys.find(k => k.includes('delay'));
@@ -73,8 +156,23 @@ function getDaysInfo(expectedDelivery, inspectionDate) {
     return { daysLeft, percent };
 }
 
-function renderTracker(project, headers) {
+function getHoursMinutesLeft(expectedDelivery) {
+    if (!expectedDelivery) return null;
+    const delivery = parseLocalDate(expectedDelivery);
+    if (!delivery) return null;
+    // Set delivery to end of day (5pm)
+    delivery.setHours(17, 0, 0, 0);
+    const now = new Date();
+    const diff = delivery - now;
+    if (diff <= 0) return { hours: 0, minutes: 0, total: 0 };
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return { hours, minutes, total: diff };
+}
+
+function renderTracker(project, headers, options = {}) {
     const orderedKeys = headers ? headers.map(h => headerToKey(h)) : Object.keys(project);
+    const isPinned = options.isPinned || false;
 
     // Find key fields
     const nameKey = orderedKeys.find(k => k === 'name') || orderedKeys.find(k => k.includes('name') && !k.includes('last'));
@@ -93,15 +191,21 @@ function renderTracker(project, headers) {
     const expectedDelivery = deliveryKey ? project[deliveryKey] : '';
     const delayReason = delayKey ? project[delayKey] : '';
 
-    // Derive status from dates
     const { status, stageIndex } = deriveStatus(project, orderedKeys);
     const isDelayed = stageIndex === -1;
     const isCompleted = stageIndex === 3;
     const activeStage = isDelayed ? 2 : stageIndex;
 
     const { daysLeft, percent } = getDaysInfo(expectedDelivery, inspectionDate);
+    const urgent = isUrgent(fullName);
+    const requestedDate = getDeliveryRequest(fullName);
 
-    // Format dates nicely
+    // Play sound when delivered + urgent
+    if (isCompleted && urgent && !deliverySoundPlayed[fullName.toLowerCase()]) {
+        deliverySoundPlayed[fullName.toLowerCase()] = true;
+        setTimeout(() => playDeliverySound(), 500);
+    }
+
     const formatDate = (d) => {
         if (!d) return '-';
         const date = parseLocalDate(d);
@@ -109,7 +213,7 @@ function renderTracker(project, headers) {
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
-    // ETA text
+    // ETA text - use hours/minutes for urgent
     let etaText, etaSub, etaClass;
     if (isCompleted) {
         etaText = 'Delivered';
@@ -119,6 +223,21 @@ function renderTracker(project, headers) {
         etaText = 'Delayed';
         etaSub = delayReason || 'Processing delay';
         etaClass = 'status-on-hold';
+    } else if (urgent && expectedDelivery) {
+        const hm = getHoursMinutesLeft(expectedDelivery);
+        if (hm && hm.total > 0) {
+            etaText = `${hm.hours}h ${hm.minutes}m`;
+            etaSub = `Expected delivery: ${formatDate(expectedDelivery)}`;
+            etaClass = 'status-urgent';
+        } else if (hm && hm.total <= 0) {
+            etaText = 'Overdue';
+            etaSub = `Was expected on ${formatDate(expectedDelivery)}`;
+            etaClass = 'status-urgent';
+        } else {
+            etaText = 'Urgent';
+            etaSub = 'Delivery date pending';
+            etaClass = 'status-urgent';
+        }
     } else if (daysLeft !== null) {
         if (daysLeft < 0) {
             etaText = `${Math.abs(daysLeft)} days overdue`;
@@ -143,7 +262,6 @@ function renderTracker(project, headers) {
         etaClass = 'status-pending';
     }
 
-    // Progress bar width
     let barPercent;
     if (isCompleted) barPercent = 100;
     else if (isDelayed) barPercent = (2 / 3) * 100;
@@ -151,12 +269,33 @@ function renderTracker(project, headers) {
 
     const vehiclePercent = isCompleted ? 92 : (percent > 0 ? Math.min(88, percent) : barPercent * 0.88);
 
+    const cardClass = `tracker-card${urgent && !isCompleted ? ' urgent-card' : ''}${isCompleted && isPinned ? ' delivered-card' : ''}`;
+    const etaFullClass = `tracker-eta ${etaClass}${urgent && !isCompleted ? ' urgent-eta' : ''}`;
+    const barFillClass = `timeline-bar-fill${isCompleted ? ' completed' : ''}${urgent && !isCompleted ? ' urgent-bar' : ''}`;
+
+    // Urgency toggle button
+    const urgencyBtnLabel = urgent ? 'URGENT' : 'Mark Urgent';
+    const urgencyBtnClass = urgent ? 'urgency-btn active' : 'urgency-btn';
+
     return `
-        <div class="tracker-card">
-            <div class="tracker-eta ${etaClass}">
-                <div class="eta-label">Estimated Delivery</div>
-                <div class="eta-value">${etaText}</div>
-                <div class="eta-sublabel">${etaSub}</div>
+        <div class="${cardClass}" data-name="${fullName.replace(/"/g, '&quot;')}">
+            <div class="${etaFullClass}">
+                <div class="eta-top-row">
+                    <div>
+                        <div class="eta-label">Estimated Delivery</div>
+                        <div class="eta-value">${etaText}</div>
+                        <div class="eta-sublabel">${etaSub}</div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="${urgencyBtnClass}" onclick="toggleUrgency('${fullName.replace(/'/g, "\\'")}', this)" title="Toggle urgent tracking - shows countdown in hours/minutes and plays a sound on delivery">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <span>${urgencyBtnLabel}</span>
+                        </button>
+                        <button class="info-btn" onclick="showInfoModal()" title="How urgency works">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div class="tracker-info">
@@ -166,7 +305,7 @@ function renderTracker(project, headers) {
 
             <div class="delivery-vehicle">
                 <div class="vehicle-start"></div>
-                <div class="vehicle-road"></div>
+                <div class="vehicle-road${urgent && !isCompleted ? ' urgent-road' : ''}"></div>
                 <div class="vehicle-icon" style="left: 0%" data-target="${vehiclePercent}">📋</div>
                 <div class="vehicle-end">
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3" fill="#0a0a0a"/></svg>
@@ -177,7 +316,7 @@ function renderTracker(project, headers) {
             <div class="tracker-timeline">
                 <div class="timeline-track">
                     <div class="timeline-bar">
-                        <div class="timeline-bar-fill ${isCompleted ? 'completed' : ''}" style="width: 0%" data-target="${barPercent}"></div>
+                        <div class="${barFillClass}" style="width: 0%" data-target="${barPercent}"></div>
                     </div>
                     ${STAGES.map((stage, i) => {
                         let stepClass = '';
@@ -185,7 +324,7 @@ function renderTracker(project, headers) {
                         else if (i < activeStage) stepClass = 'done';
                         else if (i === activeStage && !isDelayed) stepClass = 'active';
                         return `
-                            <div class="timeline-step ${stepClass}">
+                            <div class="timeline-step ${stepClass}${urgent && !isCompleted ? ' urgent-step' : ''}">
                                 <div class="step-dot">${STAGE_ICONS[stage]}</div>
                                 <span class="step-label">${stage}</span>
                             </div>
@@ -217,12 +356,25 @@ function renderTracker(project, headers) {
                     <span class="detail-row-label">Expected Delivery</span>
                     <span class="detail-row-value">${formatDate(expectedDelivery)}</span>
                 </div>
+                ${requestedDate ? `
+                <div class="detail-row">
+                    <span class="detail-row-label">Requested Delivery</span>
+                    <span class="detail-row-value" style="color: #F6AE2D;">${formatDate(requestedDate)}</span>
+                </div>` : ''}
                 ${delayReason ? `
                 <div class="detail-row">
                     <span class="detail-row-label">Delay Reason</span>
                     <span class="detail-row-value" style="color: #E54D42;">${delayReason}</span>
                 </div>` : ''}
             </div>
+
+            ${!isCompleted ? `
+            <div class="card-footer-actions">
+                <button class="request-date-btn" onclick="showDeliveryModal('${fullName.replace(/'/g, "\\'")}')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    Request Delivery Date
+                </button>
+            </div>` : ''}
         </div>
     `;
 }
@@ -236,11 +388,84 @@ function animateCards() {
     });
 }
 
-async function doSearch() {
+// --- Toggle urgency ---
+function toggleUrgency(name, btn) {
+    const nowUrgent = !isUrgent(name);
+    setUrgency(name, nowUrgent);
+    // Re-render everything
+    refreshAll();
+}
+
+// --- Info modal ---
+function showInfoModal() {
+    const modal = document.getElementById('infoModal');
+    modal.style.display = 'flex';
+}
+
+function closeInfoModal() {
+    document.getElementById('infoModal').style.display = 'none';
+}
+
+// --- Delivery date request modal ---
+let deliveryModalName = '';
+
+function showDeliveryModal(name) {
+    deliveryModalName = name;
+    const modal = document.getElementById('deliveryModal');
+    document.getElementById('deliveryModalName').textContent = name;
+    document.getElementById('deliveryDateInput').value = '';
+    document.getElementById('deliveryReason').value = '';
+    modal.style.display = 'flex';
+}
+
+function closeDeliveryModal() {
+    document.getElementById('deliveryModal').style.display = 'none';
+}
+
+async function submitDeliveryRequest() {
+    const date = document.getElementById('deliveryDateInput').value;
+    const reason = document.getElementById('deliveryReason').value.trim();
+    if (!date) {
+        alert('Please select a desired delivery date.');
+        return;
+    }
+
+    const submitBtn = document.querySelector('#deliveryModal .modal-submit');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+
+    try {
+        const res = await fetch('/api/request-delivery', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: deliveryModalName,
+                requested_date: date,
+                reason: reason
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            setDeliveryRequest(deliveryModalName, date);
+            closeDeliveryModal();
+            refreshAll();
+        } else {
+            alert(data.error || 'Failed to send request. Please try again.');
+        }
+    } catch (e) {
+        alert('Connection error. Please try again.');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Request';
+    }
+}
+
+// --- Search ---
+async function doSearch(pinAfterSearch) {
     const query = searchInput.value.trim();
     if (!query) {
         resultsContainer.innerHTML = '';
-        emptyState.style.display = '';
+        if (!getPinned().length) emptyState.style.display = '';
         return;
     }
 
@@ -257,6 +482,17 @@ async function doSearch() {
             return;
         }
 
+        // Auto-pin searched names
+        if (pinAfterSearch !== false) {
+            const orderedKeys = data.headers ? data.headers.map(h => headerToKey(h)) : [];
+            const nameKey = orderedKeys.find(k => k === 'name') || orderedKeys.find(k => k.includes('name') && !k.includes('last'));
+            const lastNameKey = orderedKeys.find(k => k.includes('last'));
+            data.results.forEach(p => {
+                const fn = [p[nameKey], p[lastNameKey]].filter(Boolean).join(' ');
+                if (fn) addPinned(fn);
+            });
+        }
+
         resultsContainer.innerHTML = data.results.map(p => renderTracker(p, data.headers)).join('');
         requestAnimationFrame(() => animateCards());
     } catch (e) {
@@ -266,17 +502,92 @@ async function doSearch() {
     }
 }
 
-searchBtn.addEventListener('click', doSearch);
-searchInput.addEventListener('keypress', e => { if (e.key === 'Enter') doSearch(); });
+// --- Pinned cards refresh ---
+async function refreshPinned() {
+    const pinned = getPinned();
+    if (!pinned.length) {
+        if (pinnedContainer) pinnedContainer.innerHTML = '';
+        return;
+    }
+
+    try {
+        const delivered = [];
+        let html = '';
+        for (const name of pinned) {
+            const res = await fetch(`/api/search?q=${encodeURIComponent(name)}`);
+            const data = await res.json();
+            if (data.results && data.results.length > 0) {
+                const orderedKeys = data.headers ? data.headers.map(h => headerToKey(h)) : Object.keys(data.results[0]);
+                data.results.forEach(p => {
+                    const { stageIndex } = deriveStatus(p, orderedKeys);
+                    if (stageIndex === 3) {
+                        delivered.push(name);
+                    }
+                    html += renderTracker(p, data.headers, { isPinned: true });
+                });
+            }
+        }
+
+        if (pinnedContainer) {
+            if (html) {
+                pinnedContainer.innerHTML = '<div class="pinned-header"><span>Your Tracked Inspections</span></div>' + html;
+            } else {
+                pinnedContainer.innerHTML = '';
+            }
+        }
+
+        // Remove delivered after 30 seconds with fade
+        if (delivered.length) {
+            setTimeout(() => {
+                delivered.forEach(name => {
+                    removePinned(name);
+                    setUrgency(name, false);
+                });
+                refreshPinned();
+            }, 30000);
+        }
+
+        requestAnimationFrame(() => animateCards());
+    } catch (e) {}
+}
+
+async function refreshAll() {
+    await refreshPinned();
+    const query = searchInput.value.trim();
+    if (query) await doSearch(false);
+    if (!getPinned().length && !query) emptyState.style.display = '';
+    else emptyState.style.display = 'none';
+}
+
+// --- Event listeners ---
+searchBtn.addEventListener('click', () => doSearch(true));
+searchInput.addEventListener('keypress', e => { if (e.key === 'Enter') doSearch(true); });
 
 let debounceTimer;
 searchInput.addEventListener('input', () => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
-        if (searchInput.value.trim().length >= 2) doSearch();
+        if (searchInput.value.trim().length >= 2) doSearch(true);
         else if (searchInput.value.trim().length === 0) {
             resultsContainer.innerHTML = '';
-            emptyState.style.display = '';
+            if (!getPinned().length) emptyState.style.display = '';
         }
     }, 400);
+});
+
+// Close modals on outside click
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal-overlay')) {
+        e.target.style.display = 'none';
+    }
+});
+
+// Auto-refresh pinned cards on load
+document.addEventListener('DOMContentLoaded', () => {
+    refreshPinned();
+    // Refresh urgent countdowns every minute
+    setInterval(() => {
+        const urgMap = getUrgency();
+        if (Object.keys(urgMap).length > 0) refreshAll();
+    }, 60000);
 });

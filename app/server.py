@@ -221,6 +221,59 @@ def admin_preview():
     return jsonify({'projects': projects, 'headers': headers})
 
 
+# --- Delivery date request API ---
+
+@app.route('/api/request-delivery', methods=['POST'])
+@customer_required
+def api_request_delivery():
+    import smtplib
+    from email.mime.text import MIMEText
+    from datetime import datetime
+
+    data = request.get_json()
+    name = data.get('name', '').strip()
+    requested_date = data.get('requested_date', '').strip()
+    reason = data.get('reason', '').strip()
+    customer_name = session.get('customer_name', 'Unknown')
+
+    if not name or not requested_date:
+        return jsonify({'success': False, 'error': 'Name and date are required'})
+
+    # Log the request
+    log_path = os.path.join(config.DATA_DIR, 'delivery_requests.log')
+    with open(log_path, 'a') as f:
+        f.write(f"{datetime.now().isoformat()} | Customer: {customer_name} | File: {name} | Requested: {requested_date} | Reason: {reason}\n")
+
+    # Try to send email
+    email_sent = False
+    if config.SMTP_USER and config.SMTP_PASS:
+        try:
+            subject = f"Urgent Delivery Request: {name}"
+            body = (
+                f"Delivery Date Request\n"
+                f"{'='*40}\n\n"
+                f"Client/File: {name}\n"
+                f"Requested by: {customer_name}\n"
+                f"Desired delivery date: {requested_date}\n"
+                f"Reason: {reason or 'Not specified'}\n\n"
+                f"This request was submitted through the AF Tracker.\n"
+            )
+            msg = MIMEText(body)
+            msg['Subject'] = subject
+            msg['From'] = config.SMTP_USER
+            msg['To'] = config.NOTIFY_EMAIL
+
+            with smtplib.SMTP(config.SMTP_HOST, config.SMTP_PORT) as server:
+                server.starttls()
+                server.login(config.SMTP_USER, config.SMTP_PASS)
+                server.send_message(msg)
+            email_sent = True
+        except Exception as e:
+            print(f"Email send failed: {e}")
+
+    return jsonify({'success': True, 'email_sent': email_sent})
+
+
 # --- Embeddable widget ---
 
 @app.route('/embed')

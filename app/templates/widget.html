@@ -28,6 +28,9 @@
         </div>
     </div>
 
+    <!-- Pinned/tracked inspections -->
+    <div id="pinnedContainer"></div>
+
     <div id="resultsSection" class="results-section">
         <div id="loadingIndicator" class="loading" style="display:none;">
             <div class="spinner"></div>
@@ -43,6 +46,80 @@
             </div>
             <h3>Track Your Inspection</h3>
             <p>Enter your name or claim number to see real-time status and estimated delivery</p>
+        </div>
+    </div>
+</div>
+
+<!-- Info Modal -->
+<div id="infoModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>How Urgency Tracking Works</h3>
+            <button class="modal-close" onclick="closeInfoModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="info-item">
+                <div class="info-icon urgent-icon-demo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </div>
+                <div>
+                    <strong>Mark as Urgent</strong>
+                    <p>Tap the "Mark Urgent" button on any inspection card to flag it as high priority.</p>
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-icon">&#9200;</div>
+                <div>
+                    <strong>Hour/Minute Countdown</strong>
+                    <p>When urgent, the delivery countdown switches from days to hours and minutes for precise tracking.</p>
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-icon">&#128276;</div>
+                <div>
+                    <strong>Delivery Notification</strong>
+                    <p>A sound alert plays when an urgent inspection is marked as delivered, so you don't miss it.</p>
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-icon">&#128197;</div>
+                <div>
+                    <strong>Request Delivery Date</strong>
+                    <p>Use the "Request Delivery Date" button to let us know if you need a report by a specific date. We'll receive your request and prioritize accordingly.</p>
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-icon">&#128204;</div>
+                <div>
+                    <strong>Auto-Pinned History</strong>
+                    <p>Searched inspections stay pinned at the top of your dashboard until they reach Delivered status, then they automatically disappear.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delivery Date Request Modal -->
+<div id="deliveryModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>Request Delivery Date</h3>
+            <button class="modal-close" onclick="closeDeliveryModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p class="modal-desc">Request a specific delivery date for <strong id="deliveryModalName"></strong>. We will be notified and prioritize this file accordingly.</p>
+            <div class="modal-field">
+                <label>Desired Delivery Date</label>
+                <input type="date" id="deliveryDateInput" class="modal-input">
+            </div>
+            <div class="modal-field">
+                <label>Reason (optional)</label>
+                <textarea id="deliveryReason" class="modal-input" rows="3" placeholder="e.g. Court deadline, insurance requirement..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline modal-cancel" onclick="closeDeliveryModal()">Cancel</button>
+            <button class="btn btn-primary modal-submit" onclick="submitDeliveryRequest()">Send Request</button>
         </div>
     </div>
 </div>
