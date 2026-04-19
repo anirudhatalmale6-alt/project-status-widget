@@ -14,3 +14,6 @@ EXCEL_FILE = os.path.join(UPLOAD_DIR, 'projects_data.xlsx')
 DB_FILE = os.path.join(DATA_DIR, 'users.db')
 PORT = int(os.environ.get('WIDGET_PORT', 5050))
 HOST = os.environ.get('WIDGET_HOST', '0.0.0.0')
+
+# Google Sheets integration (empty = use local Excel file)
+GOOGLE_SHEET_ID = os.environ.get('GOOGLE_SHEET_ID', '167nzPAhyO7M0WzhuXjMUOZIi5AFCiyDhCZMNAM7PXOk')

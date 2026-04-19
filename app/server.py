@@ -6,11 +6,39 @@ from functools import wraps
 from werkzeug.utils import secure_filename
 import config
 from excel_reader import search_projects, read_projects, get_project_headers
+from sheets_reader import (read_projects_from_sheet, search_projects_from_sheet,
+                           get_headers_from_sheet)
 from auth import create_customer, verify_customer, list_customers, delete_customer, toggle_customer, get_customer
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload
+
+
+# --- Data source helpers (Google Sheets preferred, Excel fallback) ---
+
+def _read_all():
+    if config.GOOGLE_SHEET_ID:
+        data = read_projects_from_sheet(config.GOOGLE_SHEET_ID)
+        if data:
+            return data
+    return read_projects(config.EXCEL_FILE)
+
+
+def _search(query):
+    if config.GOOGLE_SHEET_ID:
+        data = search_projects_from_sheet(config.GOOGLE_SHEET_ID, query)
+        if data is not None:
+            return data
+    return search_projects(config.EXCEL_FILE, query)
+
+
+def _headers():
+    if config.GOOGLE_SHEET_ID:
+        h = get_headers_from_sheet(config.GOOGLE_SHEET_ID)
+        if h:
+            return h
+    return get_project_headers(config.EXCEL_FILE)
 
 
 # --- Auth decorators ---
@@ -75,14 +103,14 @@ def widget():
 def api_search():
     query = request.args.get('q', '').strip()
     customer_filter = session.get('customer_filter', '').strip()
-    results = search_projects(config.EXCEL_FILE, query)
+    results = _search(query)
     # If customer has a filter, only show their records
     if customer_filter:
         filter_terms = [f.strip().lower() for f in customer_filter.split(',') if f.strip()]
         results = [r for r in results if any(
             any(ft in str(v).lower() for v in r.values()) for ft in filter_terms
         )]
-    headers = get_project_headers(config.EXCEL_FILE)
+    headers = _headers()
     return jsonify({'results': results, 'headers': headers})
 
 
@@ -90,7 +118,7 @@ def api_search():
 @customer_required
 def api_reminders():
     from datetime import datetime, timedelta
-    projects = read_projects(config.EXCEL_FILE)
+    projects = _read_all()
     today = datetime.now().date()
     reminders = []
     for p in projects:
@@ -134,10 +162,10 @@ def admin_logout():
 @admin_required
 def admin_dashboard():
     customers = list_customers()
-    has_excel = os.path.exists(config.EXCEL_FILE)
-    headers = get_project_headers(config.EXCEL_FILE) if has_excel else []
-    project_count = len(read_projects(config.EXCEL_FILE)) if has_excel else 0
-    return render_template('admin.html', customers=customers, has_excel=has_excel,
+    has_data = bool(config.GOOGLE_SHEET_ID) or os.path.exists(config.EXCEL_FILE)
+    headers = _headers() if has_data else []
+    project_count = len(_read_all()) if has_data else 0
+    return render_template('admin.html', customers=customers, has_excel=has_data,
                            headers=headers, project_count=project_count)
 
 
@@ -188,8 +216,8 @@ def admin_toggle_customer(cid):
 @app.route('/admin/preview')
 @admin_required
 def admin_preview():
-    projects = read_projects(config.EXCEL_FILE)
-    headers = get_project_headers(config.EXCEL_FILE)
+    projects = _read_all()
+    headers = _headers()
     return jsonify({'projects': projects, 'headers': headers})
 
 
@@ -206,8 +234,8 @@ def embed_search():
     token = request.args.get('token', '')
     if token != config.SECRET_KEY[:16]:
         return jsonify({'error': 'Invalid token'}), 403
-    results = search_projects(config.EXCEL_FILE, query)
-    headers = get_project_headers(config.EXCEL_FILE)
+    results = _search(query)
+    headers = _headers()
     return jsonify({'results': results, 'headers': headers})
 
 
