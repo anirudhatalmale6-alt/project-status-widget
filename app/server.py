@@ -362,7 +362,8 @@ def admin_mark_read():
 
 @app.route('/embed')
 def embed_widget():
-    return render_template('embed.html')
+    """Serve embed script for adding widget to external websites."""
+    return render_template('embed.js'), 200, {'Content-Type': 'application/javascript'}
 
 
 @app.route('/embed/search')
