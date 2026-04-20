@@ -14,6 +14,10 @@
             <span class="welcome">Welcome, {{ customer_name }}</span>
         </div>
         <div class="header-right">
+            <button class="btn btn-sm btn-outline" id="widgetModeBtn" onclick="openWidgetMode()" title="Open as small desktop widget">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="vertical-align:-2px;margin-right:4px;"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                Desktop Widget
+            </button>
             <a href="{{ url_for('customer_logout') }}" class="btn btn-sm btn-outline">Logout</a>
         </div>
     </header>
@@ -28,15 +32,18 @@
         </div>
     </div>
 
-    <!-- Pinned/tracked inspections -->
-    <div id="pinnedContainer"></div>
-
     <div id="resultsSection" class="results-section">
         <div id="loadingIndicator" class="loading" style="display:none;">
             <div class="spinner"></div>
             <span>Locating your project...</span>
         </div>
         <div id="resultsContainer"></div>
+    </div>
+
+    <!-- History: previously searched inspections (collapsed) -->
+    <div id="pinnedContainer"></div>
+
+    <div id="resultsSection2" class="results-section">
         <div id="emptyState" class="empty-state">
             <div class="empty-icon">
                 <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">

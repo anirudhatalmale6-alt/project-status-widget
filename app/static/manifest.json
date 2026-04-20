@@ -4,6 +4,7 @@
   "description": "Track your inspection status and delivery timeline",
   "start_url": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
   "background_color": "#0a0a0a",
   "theme_color": "#276EF1",
   "orientation": "any",

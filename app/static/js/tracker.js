@@ -537,11 +537,16 @@ async function submitDeliveryRequest() {
     }
 }
 
+// Track current search names to exclude from history
+let currentSearchNames = [];
+
 // --- Search ---
 async function doSearch(pinAfterSearch) {
     const query = searchInput.value.trim();
     if (!query) {
         resultsContainer.innerHTML = '';
+        currentSearchNames = [];
+        refreshPinned();
         if (!getPinned().length) emptyState.style.display = '';
         return;
     }
@@ -556,31 +561,31 @@ async function doSearch(pinAfterSearch) {
 
         if (!data.results || data.results.length === 0) {
             resultsContainer.innerHTML = '<div class="no-results">Not found</div>';
+            currentSearchNames = [];
+            refreshPinned();
             return;
         }
 
-        // Filter out results already shown in pinned section (check BEFORE pinning new names)
-        const pinnedNames = getPinned().map(n => n.toLowerCase());
         const orderedKeysForFilter = data.headers ? data.headers.map(h => headerToKey(h)) : [];
         const nameKeyF = orderedKeysForFilter.find(k => k === 'name') || orderedKeysForFilter.find(k => k.includes('name') && !k.includes('last'));
         const lastNameKeyF = orderedKeysForFilter.find(k => k.includes('last'));
 
-        const filteredResults = data.results.filter(p => {
-            const fn = [p[nameKeyF], p[lastNameKeyF]].filter(Boolean).join(' ').trim().toLowerCase();
-            return !pinnedNames.includes(fn);
-        });
+        // Always show search results expanded at the top
+        currentSearchNames = data.results.map(p =>
+            [p[nameKeyF], p[lastNameKeyF]].filter(Boolean).join(' ').trim().toLowerCase()
+        );
 
-        resultsContainer.innerHTML = filteredResults.map(p => renderTracker(p, data.headers)).join('');
+        resultsContainer.innerHTML = data.results.map(p => renderTracker(p, data.headers)).join('');
         requestAnimationFrame(() => animateCards());
 
-        // Auto-pin searched names AFTER rendering, then refresh pinned section
+        // Auto-pin searched names, then refresh history below
         if (pinAfterSearch !== false) {
             data.results.forEach(p => {
                 const fn = [p[nameKeyF], p[lastNameKeyF]].filter(Boolean).join(' ');
                 if (fn) addPinned(fn);
             });
-            refreshPinned();
         }
+        refreshPinned();
     } catch (e) {
         resultsContainer.innerHTML = '<div class="no-results">Connection error. Please try again.</div>';
     } finally {
@@ -588,7 +593,7 @@ async function doSearch(pinAfterSearch) {
     }
 }
 
-// --- Pinned cards refresh ---
+// --- Pinned cards refresh (History section) ---
 async function refreshPinned() {
     const pinned = getPinned();
     if (!pinned.length) {
@@ -596,10 +601,18 @@ async function refreshPinned() {
         return;
     }
 
+    // Filter out names currently shown in search results
+    const historyNames = pinned.filter(n => !currentSearchNames.includes(n.toLowerCase()));
+
+    if (!historyNames.length) {
+        if (pinnedContainer) pinnedContainer.innerHTML = '';
+        return;
+    }
+
     try {
         const delivered = [];
         let html = '';
-        for (const name of pinned) {
+        for (const name of historyNames) {
             const res = await fetch(`/api/search?q=${encodeURIComponent(name)}`);
             const data = await res.json();
             if (data.results && data.results.length > 0) {
@@ -616,13 +629,13 @@ async function refreshPinned() {
 
         if (pinnedContainer) {
             if (html) {
-                pinnedContainer.innerHTML = '<div class="pinned-header"><span>Your Tracked Inspections</span></div>' + html;
+                pinnedContainer.innerHTML = '<div class="pinned-header"><span>History</span></div>' + html;
             } else {
                 pinnedContainer.innerHTML = '';
             }
         }
 
-        // Remove delivered after 30 seconds with fade
+        // Remove delivered after 30 seconds
         if (delivered.length) {
             setTimeout(() => {
                 delivered.forEach(name => {
@@ -638,9 +651,13 @@ async function refreshPinned() {
 }
 
 async function refreshAll() {
-    await refreshPinned();
     const query = searchInput.value.trim();
-    if (query) await doSearch(false);
+    if (query) {
+        await doSearch(false);
+    } else {
+        currentSearchNames = [];
+        await refreshPinned();
+    }
     if (!getPinned().length && !query) emptyState.style.display = '';
     else emptyState.style.display = 'none';
 }
@@ -667,6 +684,15 @@ document.addEventListener('click', (e) => {
         e.target.style.display = 'none';
     }
 });
+
+// --- Open as compact desktop widget ---
+function openWidgetMode() {
+    const w = 380, h = 620;
+    const left = screen.width - w - 40;
+    const top = 60;
+    const url = window.location.href;
+    window.open(url, 'AFTracker', `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes`);
+}
 
 // Auto-refresh pinned cards on load
 document.addEventListener('DOMContentLoaded', () => {
