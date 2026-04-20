@@ -1165,9 +1165,24 @@
 }
 .fw-bubble:hover { transform: scale(1.1); }
 
-/* Hide full page when widget mode is active */
+/* Widget mode: widget fills the entire page */
 body.widget-mode-active .widget-container { display: none; }
-body.widget-mode-active { background: #0a0a0a; }
+body.widget-mode-active { background: #0d1117; }
+body.widget-mode-active .floating-widget {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    resize: none !important;
+}
 
 /* === Compact Desktop Widget Mode === */
 @media (max-width: 420px), (max-height: 600px) and (max-width: 500px) {
