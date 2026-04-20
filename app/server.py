@@ -100,6 +100,12 @@ def widget():
     return render_template('widget.html', customer_name=session.get('customer_name', 'Customer'))
 
 
+@app.route('/mini')
+@customer_required
+def mini_widget():
+    return render_template('mini.html', customer_name=session.get('customer_name', 'Customer'))
+
+
 @app.route('/api/search')
 @customer_required
 def api_search():

@@ -7,7 +7,7 @@ UPLOAD_DIR = os.path.join(DATA_DIR, 'uploads')
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-SECRET_KEY = os.environ.get('WIDGET_SECRET_KEY', secrets.token_hex(32))
+SECRET_KEY = os.environ.get('WIDGET_SECRET_KEY', 'af_tracker_secret_key_2026_stable')
 ADMIN_USERNAME = os.environ.get('WIDGET_ADMIN_USER', 'admin')
 ADMIN_PASSWORD = os.environ.get('WIDGET_ADMIN_PASS', 'admin123')
 EXCEL_FILE = os.path.join(UPLOAD_DIR, 'projects_data.xlsx')

@@ -1,0 +1,22 @@
+{
+  "name": "AF Tracker Widget",
+  "short_name": "AF Tracker",
+  "description": "Advance Forensic Inspection Tracker Widget",
+  "start_url": "/mini",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/static/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
