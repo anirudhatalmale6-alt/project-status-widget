@@ -687,10 +687,10 @@ document.addEventListener('click', (e) => {
 
 // --- Open as compact desktop widget ---
 function openWidgetMode() {
-    const w = 320, h = 480;
+    const w = 360, h = 520;
     const left = screen.width - w - 30;
-    const top = 40;
-    window.open('/mini', 'AFTracker', `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes`);
+    const top = 60;
+    window.open('/mini', 'AFTracker', `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes,menubar=no,toolbar=no,location=no,status=no`);
 }
 
 // Auto-refresh pinned cards on load

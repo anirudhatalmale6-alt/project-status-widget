@@ -81,3 +81,52 @@
 [2026-04-19 19:27:59 +0000] [1781764] [INFO] Worker (pid:1781769) was sent SIGTERM!
 [2026-04-19 19:27:59 +0000] [1781777] [INFO] Worker exiting (pid: 1781777)
 [2026-04-19 19:28:00 +0000] [1781764] [INFO] Shutting down: Master
+[2026-04-20 12:40:01 +0000] [2738431] [INFO] Starting gunicorn 25.3.0
+[2026-04-20 12:40:01 +0000] [2738431] [INFO] Listening at: http://0.0.0.0:5050 (2738431)
+[2026-04-20 12:40:01 +0000] [2738431] [INFO] Using worker: sync
+[2026-04-20 12:40:01 +0000] [2738436] [INFO] Booting worker with pid: 2738436
+[2026-04-20 12:40:01 +0000] [2738437] [INFO] Booting worker with pid: 2738437
+[2026-04-20 12:40:01 +0000] [2738431] [INFO] Control socket listening at /home/freelancer8/.gunicorn/gunicorn.ctl
+[2026-04-20 15:42:16 +0000] [2738431] [CRITICAL] WORKER TIMEOUT (pid:2738436)
+[2026-04-20 15:42:16 +0000] [2738436] [ERROR] Error handling request (no URI read)
+Traceback (most recent call last):
+  File "/home/freelancer8/.local/lib/python3.12/site-packages/gunicorn/workers/sync.py", line 141, in handle
+    req = next(parser)
+          ^^^^^^^^^^^^
+  File "/home/freelancer8/.local/lib/python3.12/site-packages/gunicorn/http/parser.py", line 56, in __next__
+    self.mesg = self.mesg_class(self.cfg, self.unreader, self.source_addr, self.req_count)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/freelancer8/.local/lib/python3.12/site-packages/gunicorn/http/message.py", line 410, in __init__
+    super().__init__(cfg, unreader, peer_addr)
+  File "/home/freelancer8/.local/lib/python3.12/site-packages/gunicorn/http/message.py", line 184, in __init__
+    unused = self.parse(self.unreader)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/freelancer8/.local/lib/python3.12/site-packages/gunicorn/http/message.py", line 433, in parse
+    return self._parse_python(unreader, buf)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/freelancer8/.local/lib/python3.12/site-packages/gunicorn/http/message.py", line 527, in _parse_python
+    line, buf = self.read_line(unreader, buf, self.limit_request_line)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/freelancer8/.local/lib/python3.12/site-packages/gunicorn/http/message.py", line 578, in read_line
+    self.read_into(unreader, buf)
+  File "/home/freelancer8/.local/lib/python3.12/site-packages/gunicorn/http/message.py", line 558, in read_into
+    data = unreader.read()
+           ^^^^^^^^^^^^^^^
+  File "/home/freelancer8/.local/lib/python3.12/site-packages/gunicorn/http/unreader.py", line 36, in read
+    d = self.chunk()
+        ^^^^^^^^^^^^
+  File "/home/freelancer8/.local/lib/python3.12/site-packages/gunicorn/http/unreader.py", line 65, in chunk
+    return self.sock.recv(self.mxchunk)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/freelancer8/.local/lib/python3.12/site-packages/gunicorn/workers/base.py", line 198, in handle_abort
+    sys.exit(1)
+SystemExit: 1
+[2026-04-20 15:42:16 +0000] [2738436] [INFO] Worker exiting (pid: 2738436)
+[2026-04-20 15:42:16 +0000] [2889321] [INFO] Booting worker with pid: 2889321
+[2026-04-20 15:42:16 +0000] [2738431] [INFO] Control socket listening at /home/freelancer8/.gunicorn/gunicorn.ctl
+[2026-04-20 15:45:01 +0000] [2738431] [INFO] Handling signal: term
+[2026-04-20 15:45:01 +0000] [2889321] [INFO] Worker exiting (pid: 2889321)
+[2026-04-20 15:45:01 +0000] [2738437] [INFO] Worker exiting (pid: 2738437)
+[2026-04-20 15:45:01 +0000] [2738431] [INFO] Worker (pid:2738437) was sent SIGTERM!
+[2026-04-20 15:45:01 +0000] [2738431] [INFO] Worker (pid:2889321) was sent SIGTERM!
+[2026-04-20 15:45:01 +0000] [2738431] [INFO] Shutting down: Master
