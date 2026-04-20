@@ -11,164 +11,204 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0d1117;
+            background: transparent;
             color: #fff;
             width: 100vw;
             height: 100vh;
             overflow: hidden;
-            border-radius: 16px;
             user-select: none;
         }
 
-        .mini-widget {
+        /* ===== FLOATING LOGO BUBBLE ===== */
+        .widget-bubble {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #1a2332;
+            border: 2px solid rgba(39,110,241,0.4);
+            cursor: pointer;
             display: flex;
-            flex-direction: column;
-            height: 100vh;
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 16px;
-            overflow: hidden;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 0 0 rgba(39,110,241,0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+            z-index: 10000;
+            animation: bubblePulse 3s ease-in-out infinite;
+        }
+        .widget-bubble:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 28px rgba(0,0,0,0.5), 0 0 0 6px rgba(39,110,241,0.15);
+        }
+        .widget-bubble img {
+            width: 36px;
+            height: auto;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.9);
+            padding: 2px 4px;
+        }
+        .widget-bubble.open { display: none; }
+
+        @keyframes bubblePulse {
+            0%, 100% { box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 0 0 rgba(39,110,241,0.3); }
+            50% { box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 0 8px rgba(39,110,241,0.08); }
         }
 
-        /* Drag handle / title bar */
-        .mini-header {
+        /* ===== PANEL ===== */
+        .widget-panel {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 320px;
+            max-height: 440px;
+            background: #0d1117;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+            z-index: 10001;
+            transform: scale(0) translateY(20px);
+            transform-origin: bottom right;
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s;
+        }
+        .widget-panel.open {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Panel header */
+        .panel-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 8px 12px;
+            padding: 12px 14px;
             background: #161b22;
-            cursor: move;
-            -webkit-app-region: drag;
             flex-shrink: 0;
         }
-
-        .mini-header-left {
+        .panel-header-left {
             display: flex;
             align-items: center;
             gap: 8px;
         }
-
-        .mini-logo {
-            height: 20px;
+        .panel-logo {
+            height: 22px;
             background: rgba(255,255,255,0.9);
             padding: 2px 6px;
             border-radius: 4px;
         }
-
-        .mini-title {
-            font-size: 11px;
+        .panel-title {
+            font-size: 12px;
             color: rgba(255,255,255,0.5);
-            font-weight: 600;
-            letter-spacing: 0.5px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
         }
-
-        .mini-header-btns {
-            display: flex;
-            gap: 2px;
-            -webkit-app-region: no-drag;
-        }
-
-        .mini-collapse-btn, .mini-close {
+        .panel-close {
             background: none;
             border: none;
             color: rgba(255,255,255,0.3);
             cursor: pointer;
-            font-size: 14px;
+            font-size: 18px;
             padding: 2px 6px;
-            border-radius: 4px;
+            border-radius: 6px;
+            line-height: 1;
         }
-        .mini-collapse-btn:hover, .mini-close:hover { color: #fff; background: rgba(255,255,255,0.1); }
-
-        /* Collapsed state - compact list mode */
-        body.collapsed .mini-search,
-        body.collapsed .mini-footer { display: none !important; }
-        body.collapsed .mini-results { padding: 4px 8px 4px; }
-        body.collapsed .mini-empty { padding: 10px; font-size: 11px; }
-        body.collapsed .mini-card .mini-detail { display: none !important; }
-        body.collapsed .mini-card.expanded .mini-chevron { transform: none; }
-        body.collapsed .mini-row { padding: 4px 8px; }
-        body.collapsed .mini-name { font-size: 11px; }
-        body.collapsed .mini-eta { font-size: 9px; padding: 2px 6px; }
-        body.collapsed .mini-card { margin-bottom: 2px; border-radius: 6px; }
-        body.collapsed .mini-history-label { display: none; }
+        .panel-close:hover { color: #fff; background: rgba(255,255,255,0.1); }
 
         /* Search */
-        .mini-search {
+        .panel-search {
             display: flex;
-            padding: 8px 10px;
+            padding: 10px 12px;
             gap: 6px;
             background: #0d1117;
             flex-shrink: 0;
         }
-
-        .mini-search input {
+        .panel-search input {
             flex: 1;
             background: #161b22;
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 8px;
-            padding: 7px 10px;
+            padding: 8px 10px;
             color: #fff;
-            font-size: 12px;
+            font-size: 13px;
             outline: none;
         }
-        .mini-search input:focus { border-color: #276EF1; }
-        .mini-search input::placeholder { color: rgba(255,255,255,0.25); }
-
-        .mini-search button {
+        .panel-search input:focus { border-color: #276EF1; }
+        .panel-search input::placeholder { color: rgba(255,255,255,0.25); }
+        .panel-search button {
             background: #276EF1;
             border: none;
             border-radius: 8px;
             color: #fff;
-            padding: 7px 14px;
-            font-size: 12px;
+            padding: 8px 16px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
         }
-        .mini-search button:hover { background: #1B5CD7; }
+        .panel-search button:hover { background: #1B5CD7; }
 
-        /* Results area */
-        .mini-results {
+        /* Results */
+        .panel-results {
             flex: 1;
             overflow-y: auto;
             padding: 4px 10px 10px;
         }
+        .panel-results::-webkit-scrollbar { width: 4px; }
+        .panel-results::-webkit-scrollbar-track { background: transparent; }
+        .panel-results::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
 
-        .mini-results::-webkit-scrollbar { width: 4px; }
-        .mini-results::-webkit-scrollbar-track { background: transparent; }
-        .mini-results::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
-
-        /* Empty state */
-        .mini-empty {
+        .panel-empty {
             text-align: center;
-            padding: 30px 10px;
+            padding: 28px 10px;
             color: rgba(255,255,255,0.25);
             font-size: 12px;
         }
-        .mini-empty svg { margin-bottom: 8px; opacity: 0.3; }
+        .panel-empty svg { margin-bottom: 8px; opacity: 0.3; }
 
-        /* Card */
-        .mini-card {
+        /* Footer */
+        .panel-footer {
+            padding: 8px 12px;
+            background: #161b22;
+            text-align: center;
+            flex-shrink: 0;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+        .panel-footer a {
+            color: #276EF1;
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .panel-footer a:hover { text-decoration: underline; }
+
+        /* ===== RESULT CARDS ===== */
+        .r-card {
             background: #161b22;
             border-radius: 10px;
             margin-bottom: 6px;
             overflow: hidden;
-            animation: fadeIn 0.3s ease;
+            animation: cardIn 0.3s ease;
         }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes cardIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .r-card.urgent { border: 1.5px solid #E54D42; }
 
-        .mini-card.urgent { border: 1.5px solid #E54D42; }
-
-        /* Card collapsed row */
-        .mini-row {
+        .r-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 8px 10px;
+            padding: 9px 10px;
             cursor: pointer;
             gap: 8px;
         }
-        .mini-row:hover { background: rgba(255,255,255,0.02); }
+        .r-row:hover { background: rgba(255,255,255,0.02); }
 
-        .mini-name {
+        .r-name {
             font-size: 12px;
             font-weight: 600;
             color: #fff;
@@ -178,20 +218,8 @@
             flex: 1;
             min-width: 0;
         }
-
-        .mini-status {
-            font-size: 9px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-
-        .mini-eta {
-            font-size: 11px;
+        .r-eta {
+            font-size: 10px;
             font-weight: 700;
             color: #fff;
             background: #276EF1;
@@ -200,35 +228,27 @@
             white-space: nowrap;
             flex-shrink: 0;
         }
+        .r-eta.delivered { background: #05944F; }
+        .r-eta.urgent { background: #E54D42; }
 
-        .mini-eta.delivered { background: #05944F; }
-        .mini-eta.urgent { background: #E54D42; }
-        .mini-eta.delayed { background: #E54D42; }
-
-        .mini-chevron {
+        .r-chevron {
             color: rgba(255,255,255,0.3);
             transition: transform 0.2s;
             flex-shrink: 0;
         }
 
-        /* Expanded detail */
-        .mini-detail {
-            display: none;
-            padding: 0 10px 10px;
-        }
+        .r-detail { display: none; padding: 0 10px 10px; }
+        .r-card.expanded .r-detail { display: block; }
+        .r-card.expanded .r-chevron { transform: rotate(180deg); }
 
-        .mini-card.expanded .mini-detail { display: block; }
-        .mini-card.expanded .mini-chevron { transform: rotate(180deg); }
-
-        /* Progress steps in mini */
-        .mini-steps {
+        /* Progress steps */
+        .r-steps {
             display: flex;
             justify-content: space-between;
             margin: 6px 0 8px;
             position: relative;
         }
-
-        .mini-steps::before {
+        .r-steps::before {
             content: '';
             position: absolute;
             top: 8px;
@@ -237,16 +257,14 @@
             height: 2px;
             background: rgba(255,255,255,0.06);
         }
-
-        .mini-step {
+        .r-step {
             display: flex;
             flex-direction: column;
             align-items: center;
             position: relative;
             z-index: 1;
         }
-
-        .mini-step-dot {
+        .r-dot {
             width: 18px;
             height: 18px;
             border-radius: 50%;
@@ -257,36 +275,34 @@
             justify-content: center;
             margin-bottom: 3px;
         }
-        .mini-step-dot svg { width: 8px; height: 8px; color: rgba(255,255,255,0.3); }
+        .r-dot svg { width: 8px; height: 8px; color: rgba(255,255,255,0.3); }
+        .r-step.done .r-dot { background: #05944F; border-color: #05944F; }
+        .r-step.done .r-dot svg { color: #fff; }
+        .r-step.active .r-dot { background: #276EF1; border-color: #276EF1; box-shadow: 0 0 0 3px rgba(39,110,241,0.2); }
+        .r-step.active .r-dot svg { color: #fff; }
+        .r-step.active.urg .r-dot { background: #E54D42; border-color: #E54D42; box-shadow: 0 0 0 3px rgba(229,77,66,0.2); }
 
-        .mini-step.done .mini-step-dot { background: #05944F; border-color: #05944F; }
-        .mini-step.done .mini-step-dot svg { color: #fff; }
-        .mini-step.active .mini-step-dot { background: #276EF1; border-color: #276EF1; box-shadow: 0 0 0 3px rgba(39,110,241,0.2); }
-        .mini-step.active .mini-step-dot svg { color: #fff; }
-        .mini-step.active.urgent-step .mini-step-dot { background: #E54D42; border-color: #E54D42; box-shadow: 0 0 0 3px rgba(229,77,66,0.2); }
-
-        .mini-step-label {
+        .r-lbl {
             font-size: 7px;
             color: rgba(255,255,255,0.3);
             text-align: center;
             font-weight: 600;
             max-width: 44px;
         }
-        .mini-step.done .mini-step-label { color: #05944F; }
-        .mini-step.active .mini-step-label { color: #276EF1; }
-        .mini-step.active.urgent-step .mini-step-label { color: #E54D42; }
+        .r-step.done .r-lbl { color: #05944F; }
+        .r-step.active .r-lbl { color: #276EF1; }
+        .r-step.active.urg .r-lbl { color: #E54D42; }
 
-        .mini-info-row {
+        .r-info {
             display: flex;
             justify-content: space-between;
             padding: 3px 0;
             font-size: 10px;
         }
-        .mini-info-label { color: rgba(255,255,255,0.4); }
-        .mini-info-value { color: #fff; font-weight: 600; }
+        .r-info-k { color: rgba(255,255,255,0.4); }
+        .r-info-v { color: #fff; font-weight: 600; }
 
-        /* Mini urgent btn */
-        .mini-urgent-btn {
+        .r-urg-btn {
             display: flex;
             align-items: center;
             gap: 3px;
@@ -300,18 +316,17 @@
             cursor: pointer;
             margin-top: 6px;
         }
-        .mini-urgent-btn:hover { background: rgba(255,255,255,0.1); }
-        .mini-urgent-btn.active { background: #E54D42; border-color: #E54D42; color: #fff; }
+        .r-urg-btn:hover { background: rgba(255,255,255,0.1); }
+        .r-urg-btn.active { background: #E54D42; border-color: #E54D42; color: #fff; }
 
-        .mini-not-found {
+        .r-nf {
             text-align: center;
             color: rgba(255,255,255,0.3);
             font-size: 12px;
             padding: 16px;
         }
 
-        /* History label */
-        .mini-history-label {
+        .r-hist-label {
             font-size: 9px;
             font-weight: 700;
             text-transform: uppercase;
@@ -321,59 +336,61 @@
             margin-top: 4px;
             border-top: 1px solid rgba(255,255,255,0.06);
         }
-
-        /* Open full view link */
-        .mini-footer {
-            padding: 6px 10px;
-            background: #161b22;
-            text-align: center;
-            flex-shrink: 0;
-            border-top: 1px solid rgba(255,255,255,0.06);
-        }
-        .mini-footer a {
-            color: #276EF1;
-            text-decoration: none;
-            font-size: 10px;
-            font-weight: 600;
-        }
-        .mini-footer a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
-    <div class="mini-widget">
-        <div class="mini-header">
-            <div class="mini-header-left">
-                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="AF" class="mini-logo">
-                <span class="mini-title">TRACKER</span>
+
+    <!-- FLOATING LOGO BUBBLE -->
+    <div class="widget-bubble" id="bubble" onclick="togglePanel()">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="AF">
+    </div>
+
+    <!-- EXPANDABLE PANEL -->
+    <div class="widget-panel" id="panel">
+        <div class="panel-header">
+            <div class="panel-header-left">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="AF" class="panel-logo">
+                <span class="panel-title">TRACKER</span>
             </div>
-            <div class="mini-header-btns">
-                <button class="mini-collapse-btn" onclick="toggleCollapse()" title="Collapse/Expand">
-                    <svg id="collapseIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                </button>
-                <button class="mini-close" onclick="window.close()" title="Close">&times;</button>
-            </div>
+            <button class="panel-close" onclick="togglePanel()" title="Close">&times;</button>
         </div>
 
-        <div class="mini-search">
-            <input type="text" id="miniSearchInput" placeholder="Name or Claim #..." autofocus>
-            <button id="miniSearchBtn">Track</button>
+        <div class="panel-search">
+            <input type="text" id="searchInput" placeholder="Name or Claim #...">
+            <button id="searchBtn">Track</button>
         </div>
 
-        <div class="mini-results" id="miniResults">
-            <div class="mini-empty" id="miniEmpty">
+        <div class="panel-results" id="results">
+            <div class="panel-empty" id="emptyState">
                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 <div>Search to track inspections</div>
             </div>
         </div>
 
-        <div class="mini-footer">
+        <div class="panel-footer">
             <a href="/widget" target="_blank">Open Full View</a>
         </div>
     </div>
 
     <script>
+        /* ===== PANEL TOGGLE ===== */
+        function togglePanel() {
+            const bubble = document.getElementById('bubble');
+            const panel = document.getElementById('panel');
+            const isOpen = panel.classList.contains('open');
+            if (isOpen) {
+                panel.classList.remove('open');
+                bubble.classList.remove('open');
+            } else {
+                panel.classList.add('open');
+                bubble.classList.add('open');
+                setTimeout(() => document.getElementById('searchInput').focus(), 350);
+            }
+        }
+
+        /* ===== DATA HELPERS ===== */
         const STAGES = ['Scheduled', 'Inspection', 'Report Writing', 'Delivered'];
-        const STAGE_ICONS_MINI = {
+        const ICONS = {
             'Scheduled': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>',
             'Inspection': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
             'Report Writing': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
@@ -396,22 +413,22 @@
             localStorage.setItem(URGENCY_KEY, JSON.stringify(m));
         }
 
-        function headerToKey(h) { return h.trim().toLowerCase().replace(/\s+/g, '_'); }
+        function hk(h) { return h.trim().toLowerCase().replace(/\s+/g, '_'); }
 
-        function parseLocalDate(d) {
+        function parseDate(d) {
             if (!d) return null;
             const p = d.match(/(\d{4})-(\d{2})-(\d{2})/);
             return p ? new Date(parseInt(p[1]), parseInt(p[2])-1, parseInt(p[3])) : null;
         }
 
-        function deriveStatus(project, keys) {
+        function deriveStatus(proj, keys) {
             const now = new Date(); now.setHours(0,0,0,0);
             const iKey = keys.find(k => k.includes('inspection'));
             const dKey = keys.find(k => k.includes('delivery') || k.includes('expected'));
             const dlKey = keys.find(k => k.includes('delay'));
-            const iDate = iKey ? parseLocalDate(project[iKey]) : null;
-            const dDate = dKey ? parseLocalDate(project[dKey]) : null;
-            const hasDelay = dlKey && project[dlKey] && project[dlKey].trim() !== '';
+            const iDate = iKey ? parseDate(proj[iKey]) : null;
+            const dDate = dKey ? parseDate(proj[dKey]) : null;
+            const hasDelay = dlKey && proj[dlKey] && proj[dlKey].trim() !== '';
             if (iDate) iDate.setHours(0,0,0,0);
             if (dDate) dDate.setHours(0,0,0,0);
             if (hasDelay) return { status: 'Delayed', stageIndex: -1 };
@@ -421,16 +438,9 @@
             return { status: 'Scheduled', stageIndex: 0 };
         }
 
-        function getDaysLeft(delivery) {
-            if (!delivery) return null;
-            const d = parseLocalDate(delivery); if (!d) return null;
-            const now = new Date(); now.setHours(0,0,0,0);
-            return Math.round((d - now) / (86400000));
-        }
-
-        function getCountdownText(delivery, urgent) {
+        function getEta(delivery, urgent) {
             if (!delivery) return '?';
-            const d = parseLocalDate(delivery); if (!d) return '?';
+            const d = parseDate(delivery); if (!d) return '?';
             if (urgent) {
                 d.setHours(17,0,0,0);
                 const diff = d - new Date();
@@ -439,177 +449,158 @@
                 const hrs = Math.floor((diff % 86400000) / 3600000);
                 return days > 0 ? `${days}d ${hrs}h` : `${hrs}h`;
             }
-            const days = getDaysLeft(delivery);
-            if (days === null) return '?';
+            const now = new Date(); now.setHours(0,0,0,0);
+            const days = Math.round((d - now) / 86400000);
             if (days < 0) return `${Math.abs(days)}d late`;
             if (days === 0) return 'Today';
             if (days === 1) return 'Tomorrow';
             return `${days} days`;
         }
 
-        function renderMiniCard(project, headers, expanded) {
-            const keys = headers ? headers.map(h => headerToKey(h)) : Object.keys(project);
-            const nameKey = keys.find(k => k === 'name') || keys.find(k => k.includes('name') && !k.includes('last'));
-            const lastKey = keys.find(k => k.includes('last'));
-            const cityKey = keys.find(k => k === 'city');
-            const stateKey = keys.find(k => k === 'state');
-            const inspKey = keys.find(k => k.includes('inspection'));
-            const delKey = keys.find(k => k.includes('delivery') || k.includes('expected'));
+        function fmtDate(d) {
+            if (!d) return '-';
+            const dt = parseDate(d);
+            return dt ? dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : d;
+        }
 
-            const name = [project[nameKey], project[lastKey]].filter(Boolean).join(' ') || 'Client';
-            const location = [project[cityKey], project[stateKey]].filter(Boolean).join(', ');
-            const { status, stageIndex } = deriveStatus(project, keys);
-            const delivery = delKey ? project[delKey] : '';
-            const inspection = inspKey ? project[inspKey] : '';
-            const urgent = isUrgent(name);
-            const eta = getCountdownText(delivery, urgent);
-            const isCompleted = stageIndex === 3;
-            const isDelayed = stageIndex === -1;
-            const activeStage = isDelayed ? 2 : stageIndex;
+        /* ===== RENDER CARD ===== */
+        function renderCard(proj, headers, expanded) {
+            const keys = headers ? headers.map(h => hk(h)) : Object.keys(proj);
+            const nk = keys.find(k => k === 'name') || keys.find(k => k.includes('name') && !k.includes('last'));
+            const lk = keys.find(k => k.includes('last'));
+            const ck = keys.find(k => k === 'city');
+            const sk = keys.find(k => k === 'state');
+            const ik = keys.find(k => k.includes('inspection'));
+            const dk = keys.find(k => k.includes('delivery') || k.includes('expected'));
 
-            const etaClass = isCompleted ? 'delivered' : (urgent || isDelayed) ? 'urgent' : '';
-            const cardClass = `mini-card${urgent && !isCompleted ? ' urgent' : ''}${expanded ? ' expanded' : ''}`;
+            const name = [proj[nk], proj[lk]].filter(Boolean).join(' ') || 'Client';
+            const loc = [proj[ck], proj[sk]].filter(Boolean).join(', ');
+            const { status, stageIndex } = deriveStatus(proj, keys);
+            const delivery = dk ? proj[dk] : '';
+            const inspection = ik ? proj[ik] : '';
+            const urg = isUrgent(name);
+            const eta = getEta(delivery, urg);
+            const done = stageIndex === 3;
+            const delayed = stageIndex === -1;
+            const active = delayed ? 2 : stageIndex;
 
-            const formatDate = (d) => {
-                if (!d) return '-';
-                const dt = parseLocalDate(d);
-                return dt ? dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : d;
-            };
+            const etaCls = done ? 'delivered' : (urg || delayed) ? 'urgent' : '';
+            const cardCls = `r-card${urg && !done ? ' urgent' : ''}${expanded ? ' expanded' : ''}`;
 
-            const stepsHtml = STAGES.map((s, i) => {
-                let cls = '';
-                if (isCompleted) cls = 'done';
-                else if (i < activeStage) cls = 'done';
-                else if (i === activeStage && !isDelayed) cls = 'active' + (urgent ? ' urgent-step' : '');
-                return `<div class="mini-step ${cls}"><div class="mini-step-dot">${STAGE_ICONS_MINI[s]}</div><span class="mini-step-label">${s}</span></div>`;
+            const steps = STAGES.map((s, i) => {
+                let c = '';
+                if (done) c = 'done';
+                else if (i < active) c = 'done';
+                else if (i === active && !delayed) c = 'active' + (urg ? ' urg' : '');
+                return `<div class="r-step ${c}"><div class="r-dot">${ICONS[s]}</div><span class="r-lbl">${s}</span></div>`;
             }).join('');
 
-            const urgBtnClass = urgent ? 'mini-urgent-btn active' : 'mini-urgent-btn';
-            const urgLabel = urgent ? 'URGENT' : 'Mark Urgent';
+            const urgBtnCls = urg ? 'r-urg-btn active' : 'r-urg-btn';
+            const urgLbl = urg ? 'URGENT' : 'Mark Urgent';
+            const urgSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="10" height="10"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>';
 
-            return `<div class="${cardClass}" data-name="${name.replace(/"/g, '&quot;')}">
-                <div class="mini-row" onclick="toggleMini(this)">
-                    <span class="mini-name">${name}</span>
-                    <span class="mini-eta ${etaClass}">${eta}</span>
-                    <svg class="mini-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+            return `<div class="${cardCls}" data-name="${name.replace(/"/g,'&quot;')}">
+                <div class="r-row" onclick="this.closest('.r-card').classList.toggle('expanded')">
+                    <span class="r-name">${name}</span>
+                    <span class="r-eta ${etaCls}">${eta}</span>
+                    <svg class="r-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
-                <div class="mini-detail">
-                    <div class="mini-steps">${stepsHtml}</div>
-                    <div class="mini-info-row"><span class="mini-info-label">Status</span><span class="mini-info-value">${status}</span></div>
-                    ${location ? `<div class="mini-info-row"><span class="mini-info-label">Location</span><span class="mini-info-value">${location}</span></div>` : ''}
-                    <div class="mini-info-row"><span class="mini-info-label">Inspection</span><span class="mini-info-value">${formatDate(inspection)}</span></div>
-                    <div class="mini-info-row"><span class="mini-info-label">Delivery</span><span class="mini-info-value">${formatDate(delivery)}</span></div>
-                    ${!isCompleted ? `<button class="${urgBtnClass}" onclick="event.stopPropagation(); toggleMiniUrgency('${name.replace(/'/g, "\\'")}', this)">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="10" height="10"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
-                        ${urgLabel}
+                <div class="r-detail">
+                    <div class="r-steps">${steps}</div>
+                    <div class="r-info"><span class="r-info-k">Status</span><span class="r-info-v">${status}</span></div>
+                    ${loc ? `<div class="r-info"><span class="r-info-k">Location</span><span class="r-info-v">${loc}</span></div>` : ''}
+                    <div class="r-info"><span class="r-info-k">Inspection</span><span class="r-info-v">${fmtDate(inspection)}</span></div>
+                    <div class="r-info"><span class="r-info-k">Delivery</span><span class="r-info-v">${fmtDate(delivery)}</span></div>
+                    ${!done ? `<button class="${urgBtnCls}" onclick="event.stopPropagation(); toggleUrg('${name.replace(/'/g,"\\'")}', this)">
+                        ${urgSvg} ${urgLbl}
                     </button>` : ''}
                 </div>
             </div>`;
         }
 
-        function toggleMini(row) {
-            row.closest('.mini-card').classList.toggle('expanded');
-        }
-
-        function toggleMiniUrgency(name, btn) {
+        function toggleUrg(name, btn) {
             const nowUrg = !isUrgent(name);
             setUrgency(name, nowUrg);
-            if (nowUrg) { btn.classList.add('active'); btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="10" height="10"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg> URGENT'; }
-            else { btn.classList.remove('active'); btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="10" height="10"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg> Mark Urgent'; }
-            const card = btn.closest('.mini-card');
+            const urgSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="10" height="10"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>';
+            if (nowUrg) { btn.classList.add('active'); btn.innerHTML = urgSvg + ' URGENT'; }
+            else { btn.classList.remove('active'); btn.innerHTML = urgSvg + ' Mark Urgent'; }
+            const card = btn.closest('.r-card');
             if (nowUrg) card.classList.add('urgent'); else card.classList.remove('urgent');
             fetch('/api/notify-urgent', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({name, urgent: nowUrg}) }).catch(()=>{});
-            setTimeout(() => doMiniSearch(false), 300);
+            setTimeout(() => doSearch(false), 300);
         }
 
-        let currentMiniSearchNames = [];
+        /* ===== SEARCH ===== */
+        let currentNames = [];
 
-        async function doMiniSearch(pin) {
-            const q = document.getElementById('miniSearchInput').value.trim();
-            const results = document.getElementById('miniResults');
-            const empty = document.getElementById('miniEmpty');
-            if (!q) { results.innerHTML = ''; if (empty) results.appendChild(empty); empty.style.display = ''; currentMiniSearchNames = []; refreshMiniPinned(); return; }
+        async function doSearch(pin) {
+            const q = document.getElementById('searchInput').value.trim();
+            const res = document.getElementById('results');
+            const empty = document.getElementById('emptyState');
+            if (!q) { res.innerHTML = ''; if (empty) { res.appendChild(empty); empty.style.display = ''; } currentNames = []; refreshPinned(); return; }
             if (empty) empty.style.display = 'none';
 
             try {
-                const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
-                const data = await res.json();
+                const resp = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+                const data = await resp.json();
                 if (!data.results || !data.results.length) {
-                    let html = '<div class="mini-not-found">Not found</div>';
-                    currentMiniSearchNames = [];
-                    const pinnedHtml = await getMiniPinnedHtml();
-                    results.innerHTML = html + pinnedHtml;
+                    currentNames = [];
+                    const pinHtml = await getPinnedHtml();
+                    res.innerHTML = '<div class="r-nf">Not found</div>' + pinHtml;
                     return;
                 }
 
-                const keys = data.headers ? data.headers.map(h => headerToKey(h)) : [];
+                const keys = data.headers ? data.headers.map(h => hk(h)) : [];
                 const nk = keys.find(k => k === 'name') || keys.find(k => k.includes('name') && !k.includes('last'));
                 const lk = keys.find(k => k.includes('last'));
-                currentMiniSearchNames = data.results.map(p => [p[nk], p[lk]].filter(Boolean).join(' ').trim().toLowerCase());
+                currentNames = data.results.map(p => [p[nk], p[lk]].filter(Boolean).join(' ').trim().toLowerCase());
 
-                let html = data.results.map(p => renderMiniCard(p, data.headers, true)).join('');
+                let html = data.results.map(p => renderCard(p, data.headers, true)).join('');
                 if (pin !== false) data.results.forEach(p => { const fn = [p[nk], p[lk]].filter(Boolean).join(' '); if (fn) addPinned(fn); });
 
-                const pinnedHtml = await getMiniPinnedHtml();
-                results.innerHTML = html + pinnedHtml;
+                const pinHtml = await getPinnedHtml();
+                res.innerHTML = html + pinHtml;
             } catch(e) {
-                results.innerHTML = '<div class="mini-not-found">Connection error</div>';
+                res.innerHTML = '<div class="r-nf">Connection error</div>';
             }
         }
 
-        async function getMiniPinnedHtml() {
-            const pinned = getPinned().filter(n => !currentMiniSearchNames.includes(n.toLowerCase()));
+        async function getPinnedHtml() {
+            const pinned = getPinned().filter(n => !currentNames.includes(n.toLowerCase()));
             if (!pinned.length) return '';
-            let html = '<div class="mini-history-label">History</div>';
+            let html = '<div class="r-hist-label">History</div>';
             for (const name of pinned) {
                 try {
-                    const res = await fetch(`/api/search?q=${encodeURIComponent(name)}`);
-                    const data = await res.json();
+                    const resp = await fetch(`/api/search?q=${encodeURIComponent(name)}`);
+                    const data = await resp.json();
                     if (data.results && data.results.length) {
-                        html += data.results.map(p => renderMiniCard(p, data.headers, false)).join('');
+                        html += data.results.map(p => renderCard(p, data.headers, false)).join('');
                     }
                 } catch(e) {}
             }
             return html;
         }
 
-        async function refreshMiniPinned() {
-            const results = document.getElementById('miniResults');
-            const pinnedHtml = await getMiniPinnedHtml();
-            // Keep existing search results, replace pinned section
-            const histLabel = results.querySelector('.mini-history-label');
-            if (histLabel) {
-                // Remove everything from history label onward
-                while (histLabel.nextSibling) histLabel.nextSibling.remove();
-                histLabel.remove();
-            }
-            results.insertAdjacentHTML('beforeend', pinnedHtml);
+        async function refreshPinned() {
+            const res = document.getElementById('results');
+            const pinHtml = await getPinnedHtml();
+            const hl = res.querySelector('.r-hist-label');
+            if (hl) { while (hl.nextSibling) hl.nextSibling.remove(); hl.remove(); }
+            res.insertAdjacentHTML('beforeend', pinHtml);
         }
 
-        document.getElementById('miniSearchBtn').addEventListener('click', () => doMiniSearch(true));
-        document.getElementById('miniSearchInput').addEventListener('keypress', e => { if (e.key === 'Enter') doMiniSearch(true); });
+        document.getElementById('searchBtn').addEventListener('click', () => doSearch(true));
+        document.getElementById('searchInput').addEventListener('keypress', e => { if (e.key === 'Enter') doSearch(true); });
 
-        let miniDebounce;
-        document.getElementById('miniSearchInput').addEventListener('input', () => {
-            clearTimeout(miniDebounce);
-            miniDebounce = setTimeout(() => {
-                if (document.getElementById('miniSearchInput').value.trim().length >= 2) doMiniSearch(true);
+        let debounce;
+        document.getElementById('searchInput').addEventListener('input', () => {
+            clearTimeout(debounce);
+            debounce = setTimeout(() => {
+                if (document.getElementById('searchInput').value.trim().length >= 2) doSearch(true);
             }, 400);
         });
 
-        // Collapse/expand widget - toggles between full view and compact list
-        function toggleCollapse() {
-            document.body.classList.toggle('collapsed');
-            const icon = document.getElementById('collapseIcon');
-            if (document.body.classList.contains('collapsed')) {
-                icon.innerHTML = '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>';
-            } else {
-                icon.innerHTML = '<line x1="5" y1="12" x2="19" y2="12"/>';
-            }
-        }
-
-        // Load pinned on start
-        document.addEventListener('DOMContentLoaded', () => refreshMiniPinned());
+        document.addEventListener('DOMContentLoaded', () => refreshPinned());
     </script>
 </body>
 </html>
