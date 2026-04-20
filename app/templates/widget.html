@@ -14,9 +14,9 @@
             <span class="welcome">Welcome, {{ customer_name }}</span>
         </div>
         <div class="header-right">
-            <button class="btn btn-sm btn-outline" id="widgetModeBtn" onclick="openWidgetMode()" title="Open as small desktop widget">
+            <button class="btn btn-sm btn-outline" id="widgetModeBtn" onclick="toggleFloatingWidget()" title="Switch to mini widget">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="vertical-align:-2px;margin-right:4px;"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                Desktop Widget
+                Mini Widget
             </button>
             <a href="{{ url_for('customer_logout') }}" class="btn btn-sm btn-outline">Logout</a>
         </div>
@@ -130,8 +130,43 @@
         </div>
     </div>
 </div>
+<!-- Floating Mini Widget Panel -->
+<div id="floatingWidget" class="floating-widget" style="display:none;">
+    <div class="fw-header" id="fwDragHandle">
+        <div class="fw-header-left">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="AF" class="fw-logo">
+            <span class="fw-title">TRACKER</span>
+        </div>
+        <div class="fw-header-right">
+            <button class="fw-expand-btn" onclick="toggleFloatingWidget()" title="Back to full view">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            </button>
+            <button class="fw-minimize-btn" onclick="minimizeWidget()" title="Minimize">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+        </div>
+    </div>
+    <div class="fw-body" id="fwBody">
+        <div class="fw-search">
+            <input type="text" id="fwSearchInput" placeholder="Name or Claim #...">
+            <button id="fwSearchBtn">Track</button>
+        </div>
+        <div class="fw-results" id="fwResults">
+            <div class="fw-empty" id="fwEmpty">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="opacity:0.3"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <div>Search to track</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Minimized bubble -->
+<div id="fwBubble" class="fw-bubble" style="display:none;" onclick="restoreWidget()">
+    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="AF" style="height:24px;background:rgba(255,255,255,0.9);padding:2px 4px;border-radius:4px;">
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/tracker.js') }}"></script>
+<script src="{{ url_for('static', filename='js/floating-widget.js') }}"></script>
 {% endblock %}
