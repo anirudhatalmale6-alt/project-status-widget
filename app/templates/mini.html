@@ -61,8 +61,13 @@
             letter-spacing: 0.5px;
         }
 
-        .mini-close {
+        .mini-header-btns {
+            display: flex;
+            gap: 2px;
             -webkit-app-region: no-drag;
+        }
+
+        .mini-collapse-btn, .mini-close {
             background: none;
             border: none;
             color: rgba(255,255,255,0.3);
@@ -71,7 +76,20 @@
             padding: 2px 6px;
             border-radius: 4px;
         }
-        .mini-close:hover { color: #fff; background: rgba(255,255,255,0.1); }
+        .mini-collapse-btn:hover, .mini-close:hover { color: #fff; background: rgba(255,255,255,0.1); }
+
+        /* Collapsed state - compact list mode */
+        body.collapsed .mini-search,
+        body.collapsed .mini-footer { display: none !important; }
+        body.collapsed .mini-results { padding: 4px 8px 4px; }
+        body.collapsed .mini-empty { padding: 10px; font-size: 11px; }
+        body.collapsed .mini-card .mini-detail { display: none !important; }
+        body.collapsed .mini-card.expanded .mini-chevron { transform: none; }
+        body.collapsed .mini-row { padding: 4px 8px; }
+        body.collapsed .mini-name { font-size: 11px; }
+        body.collapsed .mini-eta { font-size: 9px; padding: 2px 6px; }
+        body.collapsed .mini-card { margin-bottom: 2px; border-radius: 6px; }
+        body.collapsed .mini-history-label { display: none; }
 
         /* Search */
         .mini-search {
@@ -328,7 +346,12 @@
                 <img src="{{ url_for('static', filename='images/logo.png') }}" alt="AF" class="mini-logo">
                 <span class="mini-title">TRACKER</span>
             </div>
-            <button class="mini-close" onclick="window.close()" title="Close">&times;</button>
+            <div class="mini-header-btns">
+                <button class="mini-collapse-btn" onclick="toggleCollapse()" title="Collapse/Expand">
+                    <svg id="collapseIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+                <button class="mini-close" onclick="window.close()" title="Close">&times;</button>
+            </div>
         </div>
 
         <div class="mini-search">
@@ -573,6 +596,17 @@
                 if (document.getElementById('miniSearchInput').value.trim().length >= 2) doMiniSearch(true);
             }, 400);
         });
+
+        // Collapse/expand widget - toggles between full view and compact list
+        function toggleCollapse() {
+            document.body.classList.toggle('collapsed');
+            const icon = document.getElementById('collapseIcon');
+            if (document.body.classList.contains('collapsed')) {
+                icon.innerHTML = '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>';
+            } else {
+                icon.innerHTML = '<line x1="5" y1="12" x2="19" y2="12"/>';
+            }
+        }
 
         // Load pinned on start
         document.addEventListener('DOMContentLoaded', () => refreshMiniPinned());
