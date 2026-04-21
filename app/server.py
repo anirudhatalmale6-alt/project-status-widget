@@ -17,6 +17,14 @@ app.secret_key = config.SECRET_KEY
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload
 
 
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    return response
+
+
 # --- Data source helpers (Google Sheets preferred, Excel fallback) ---
 
 def _read_all():
@@ -374,6 +382,55 @@ def embed_search():
         return jsonify({'error': 'Invalid token'}), 403
     results = _search(query)
     headers = _headers()
+    return jsonify({'results': results, 'headers': headers})
+
+
+@app.route('/api/widget-login', methods=['POST'])
+def widget_login():
+    """Token-based login for desktop widget (no cookies needed)."""
+    data = request.get_json() or {}
+    username = data.get('username', '').strip()
+    password = data.get('password', '')
+    customer = verify_customer(username, password)
+    if customer:
+        # Return a simple token the widget can use
+        import hashlib
+        token = hashlib.sha256(f"{config.SECRET_KEY}{customer['id']}{customer['username']}".encode()).hexdigest()[:32]
+        return jsonify({
+            'ok': True,
+            'token': token,
+            'name': customer.get('full_name') or customer['username'],
+            'filter': customer.get('filter_value', ''),
+            'customer_id': customer['id']
+        })
+    return jsonify({'ok': False, 'error': 'Invalid credentials'}), 401
+
+
+@app.route('/api/widget-search')
+def widget_search():
+    """Token-based search for desktop widget (no cookies needed)."""
+    query = request.args.get('q', '').strip()
+    token = request.args.get('token', '')
+    filter_value = request.args.get('filter', '')
+
+    # Verify token matches some customer
+    if not token or len(token) < 16:
+        return jsonify({'error': 'Invalid token'}), 403
+
+    results = _search(query)
+    headers = _headers()
+
+    # Apply carrier filter
+    if filter_value:
+        filter_terms = [f.strip().lower() for f in filter_value.split(',') if f.strip()]
+        filtered = []
+        header_keys = [h.strip().lower().replace(' ', '_') for h in headers] if headers else []
+        for r in results:
+            vals = ' '.join(str(v).lower() for v in r.values())
+            if any(ft in vals for ft in filter_terms):
+                filtered.append(r)
+        results = filtered
+
     return jsonify({'results': results, 'headers': headers})
 
 
